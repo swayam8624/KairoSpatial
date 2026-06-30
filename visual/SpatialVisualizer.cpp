@@ -803,6 +803,36 @@ int main()
             background: #0b1220;
         }
 
+        .toolbar-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            padding-right: 10px;
+            border-right: 1px solid #1e293b;
+        }
+
+        .toolbar-group:last-child {
+            border-right: 0;
+        }
+
+        .toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 34px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: #111827;
+            color: #dbeafe;
+            padding: 0 10px;
+            font-size: 0.88rem;
+        }
+
+        .toggle input {
+            accent-color: #38bdf8;
+        }
+
         .toolbar button,
         .tool-button {
             min-height: 34px;
@@ -886,6 +916,10 @@ int main()
             stroke-width: 4px;
         }
 
+        .vis-hidden {
+            display: none;
+        }
+
         .card h2 {
             margin: 0 0 6px;
             font-size: 1.1rem;
@@ -940,12 +974,24 @@ int main()
       -> KairoMath</div>
         </header>
         <nav class="toolbar" aria-label="Visualizer panels">
-            <button type="button" data-filter="all" aria-pressed="true">All</button>
-            <button type="button" data-filter="static" aria-pressed="false">Static acceleration</button>
-            <button type="button" data-filter="dynamic" aria-pressed="false">Dynamic tree</button>
-            <button type="button" data-filter="grid" aria-pressed="false">Grid</button>
-            <button type="button" data-filter="points" aria-pressed="false">KD points</button>
-            <button type="button" data-filter="graph" aria-pressed="false">Navigation</button>
+            <div class="toolbar-group" aria-label="Panel filter">
+                <button type="button" data-filter="all" aria-pressed="true">All</button>
+                <button type="button" data-filter="static" aria-pressed="false">Static acceleration</button>
+                <button type="button" data-filter="dynamic" aria-pressed="false">Dynamic tree</button>
+                <button type="button" data-filter="grid" aria-pressed="false">Grid</button>
+                <button type="button" data-filter="points" aria-pressed="false">KD points</button>
+                <button type="button" data-filter="graph" aria-pressed="false">Navigation</button>
+            </div>
+            <div class="toolbar-group" aria-label="Layer masks">
+                <label class="toggle"><input type="checkbox" data-layer-toggle="1" checked>Layer 1</label>
+                <label class="toggle"><input type="checkbox" data-layer-toggle="2" checked>Layer 2</label>
+                <label class="toggle"><input type="checkbox" data-layer-toggle="4" checked>Layer 4</label>
+            </div>
+            <div class="toolbar-group" aria-label="Debug overlays">
+                <label class="toggle"><input type="checkbox" data-kind-toggle="bvh-node" checked>BVH nodes</label>
+                <label class="toggle"><input type="checkbox" data-kind-toggle="query-shape" checked>Queries</label>
+                <label class="toggle"><input type="checkbox" data-kind-toggle="hash-cell" checked>Grid cells</label>
+            </div>
         </nav>
         <section class="grid">
 )";
@@ -962,6 +1008,8 @@ int main()
         (() => {
             const cards = [...document.querySelectorAll(".card")];
             const filterButtons = [...document.querySelectorAll("[data-filter]")];
+            const layerToggles = [...document.querySelectorAll("[data-layer-toggle]")];
+            const kindToggles = [...document.querySelectorAll("[data-kind-toggle]")];
             const inspector = document.querySelector("[data-inspector-text]");
             let selectedElement = null;
 
@@ -981,6 +1029,28 @@ int main()
 
             filterButtons.forEach((button) => {
                 button.addEventListener("click", () => applyFilter(button.dataset.filter));
+            });
+
+            function applyVisibility() {
+                const enabledLayers = new Set(
+                    layerToggles
+                        .filter((toggle) => toggle.checked)
+                        .map((toggle) => toggle.dataset.layerToggle)
+                );
+
+                document.querySelectorAll("[data-layer]").forEach((element) => {
+                    element.classList.toggle("vis-hidden", !enabledLayers.has(element.dataset.layer));
+                });
+
+                kindToggles.forEach((toggle) => {
+                    document.querySelectorAll(`.${toggle.dataset.kindToggle}`).forEach((element) => {
+                        element.classList.toggle("vis-hidden", !toggle.checked);
+                    });
+                });
+            }
+
+            [...layerToggles, ...kindToggles].forEach((toggle) => {
+                toggle.addEventListener("change", applyVisibility);
             });
 
             document.addEventListener("click", (event) => {
@@ -1043,6 +1113,7 @@ int main()
             });
 
             applyFilter("all");
+            applyVisibility();
         })();
     </script>
 </body>
