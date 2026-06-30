@@ -114,7 +114,8 @@ direct brute-force baseline is meaningful.
 
 ## Visualizer
 
-The visualizer is a generated HTML/SVG report backed by the real C++ modules:
+The visualizer is a generated interactive HTML/SVG debugger backed by the real
+C++ modules:
 
 ```bash
 cmake --build build --target KairoSpatialVisual
@@ -137,4 +138,15 @@ Dynamic AABB tree broadphase stats and layer filtering
 Spatial hash grid/radius queries
 KDTree nearest-neighbor queries
 NavigationGraph + A* paths
+```
+
+Interactive controls include:
+
+```text
+Panel filters for static, dynamic, grid, point, and graph views
+Layer-mask toggles for primitives
+Debug-overlay toggles for BVH nodes, query shapes, and grid cells
+Entity inspection on hover, tap, and keyboard focus
+Per-panel focus, zoom, reset, traversal animation, and SVG export
+Live visible-entity summary counters
 ```
