@@ -851,6 +851,16 @@ int main()
             display: none;
         }
 
+        .card.is-focused {
+            grid-column: 1 / -1;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 1px rgba(56,189,248,0.25);
+        }
+
+        .card.is-focused svg {
+            max-height: 70vh;
+        }
+
         .card h2 {
             margin: 0 0 6px;
             font-size: 1.1rem;
@@ -919,6 +929,54 @@ int main()
 
     out << R"(        </section>
     </main>
+    <script>
+        (() => {
+            const cards = [...document.querySelectorAll(".card")];
+            const filterButtons = [...document.querySelectorAll("[data-filter]")];
+
+            function applyFilter(filter) {
+                filterButtons.forEach((button) => {
+                    button.setAttribute("aria-pressed", String(button.dataset.filter === filter));
+                });
+
+                cards.forEach((card) => {
+                    const visible = filter === "all" || card.dataset.category === filter;
+                    card.hidden = !visible;
+                    if (!visible) {
+                        card.classList.remove("is-focused");
+                    }
+                });
+            }
+
+            filterButtons.forEach((button) => {
+                button.addEventListener("click", () => applyFilter(button.dataset.filter));
+            });
+
+            document.addEventListener("click", (event) => {
+                const button = event.target.closest("[data-action]");
+                if (!button) {
+                    return;
+                }
+
+                const card = button.closest(".card");
+                if (!card) {
+                    return;
+                }
+
+                if (button.dataset.action === "focus") {
+                    const willFocus = !card.classList.contains("is-focused");
+                    cards.forEach((candidate) => candidate.classList.remove("is-focused"));
+                    card.classList.toggle("is-focused", willFocus);
+                    button.textContent = willFocus ? "Unfocus" : "Focus";
+                    if (willFocus) {
+                        card.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                }
+            });
+
+            applyFilter("all");
+        })();
+    </script>
 </body>
 </html>
 )";
