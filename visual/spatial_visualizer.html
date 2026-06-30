@@ -348,6 +348,7 @@
 <button type="button" class="tool-button" data-action="zoom-in">Zoom in</button>
 <button type="button" class="tool-button" data-action="zoom-out">Zoom out</button>
 <button type="button" class="tool-button" data-action="reset-view">Reset view</button>
+<button type="button" class="tool-button" data-action="download-svg">Download SVG</button>
 </div>
 <svg viewBox="0 0 560 360" data-default-viewbox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />
@@ -408,6 +409,7 @@ tested primitives = 4</pre>
 <button type="button" class="tool-button" data-action="zoom-in">Zoom in</button>
 <button type="button" class="tool-button" data-action="zoom-out">Zoom out</button>
 <button type="button" class="tool-button" data-action="reset-view">Reset view</button>
+<button type="button" class="tool-button" data-action="download-svg">Download SVG</button>
 </div>
 <svg viewBox="0 0 560 360" data-default-viewbox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />
@@ -466,6 +468,7 @@ tested primitives = 1</pre>
 <button type="button" class="tool-button" data-action="zoom-in">Zoom in</button>
 <button type="button" class="tool-button" data-action="zoom-out">Zoom out</button>
 <button type="button" class="tool-button" data-action="reset-view">Reset view</button>
+<button type="button" class="tool-button" data-action="download-svg">Download SVG</button>
 </div>
 <svg viewBox="0 0 560 360" data-default-viewbox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />
@@ -527,6 +530,7 @@ valid = true</pre>
 <button type="button" class="tool-button" data-action="zoom-in">Zoom in</button>
 <button type="button" class="tool-button" data-action="zoom-out">Zoom out</button>
 <button type="button" class="tool-button" data-action="reset-view">Reset view</button>
+<button type="button" class="tool-button" data-action="download-svg">Download SVG</button>
 </div>
 <svg viewBox="0 0 560 360" data-default-viewbox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />
@@ -657,6 +661,7 @@ negative cell lookup id count = 1</pre>
 <button type="button" class="tool-button" data-action="zoom-in">Zoom in</button>
 <button type="button" class="tool-button" data-action="zoom-out">Zoom out</button>
 <button type="button" class="tool-button" data-action="reset-view">Reset view</button>
+<button type="button" class="tool-button" data-action="download-svg">Download SVG</button>
 </div>
 <svg viewBox="0 0 560 360" data-default-viewbox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />
@@ -714,6 +719,7 @@ point count = 6</pre>
 <button type="button" class="tool-button" data-action="zoom-in">Zoom in</button>
 <button type="button" class="tool-button" data-action="zoom-out">Zoom out</button>
 <button type="button" class="tool-button" data-action="reset-view">Reset view</button>
+<button type="button" class="tool-button" data-action="download-svg">Download SVG</button>
 </div>
 <svg viewBox="0 0 560 360" data-default-viewbox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />
@@ -895,6 +901,20 @@ path = 1 -> 2 -> 3 -> 4 -> 5</pre>
 
                 if (button.dataset.action === "reset-view") {
                     svg.setAttribute("viewBox", svg.dataset.defaultViewbox);
+                }
+
+                if (button.dataset.action === "download-svg") {
+                    const clone = svg.cloneNode(true);
+                    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+                    const svgText = new XMLSerializer().serializeToString(clone);
+                    const blob = new Blob([svgText], { type: "image/svg+xml" });
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${card.id || "kairo-spatial-panel"}.svg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    URL.revokeObjectURL(link.href);
                 }
             });
 

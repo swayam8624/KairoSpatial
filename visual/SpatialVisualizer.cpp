@@ -277,6 +277,7 @@ namespace
             << "<button type=\"button\" class=\"tool-button\" data-action=\"zoom-in\">Zoom in</button>\n"
             << "<button type=\"button\" class=\"tool-button\" data-action=\"zoom-out\">Zoom out</button>\n"
             << "<button type=\"button\" class=\"tool-button\" data-action=\"reset-view\">Reset view</button>\n"
+            << "<button type=\"button\" class=\"tool-button\" data-action=\"download-svg\">Download SVG</button>\n"
             << "</div>\n"
             << canvas.Svg()
             << "<pre>" << metrics << "</pre>\n"
@@ -1198,6 +1199,20 @@ int main()
 
                 if (button.dataset.action === "reset-view") {
                     svg.setAttribute("viewBox", svg.dataset.defaultViewbox);
+                }
+
+                if (button.dataset.action === "download-svg") {
+                    const clone = svg.cloneNode(true);
+                    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+                    const svgText = new XMLSerializer().serializeToString(clone);
+                    const blob = new Blob([svgText], { type: "image/svg+xml" });
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${card.id || "kairo-spatial-panel"}.svg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    URL.revokeObjectURL(link.href);
                 }
             });
 
