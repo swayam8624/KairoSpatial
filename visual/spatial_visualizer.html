@@ -67,6 +67,45 @@
             white-space: pre;
         }
 
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin: 0 0 18px;
+            padding: 12px;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            background: #0b1220;
+        }
+
+        .toolbar button,
+        .tool-button {
+            min-height: 34px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: #111827;
+            color: #dbeafe;
+            font: inherit;
+            font-size: 0.88rem;
+            cursor: pointer;
+            padding: 0 12px;
+        }
+
+        .toolbar button[aria-pressed="true"],
+        .tool-button:hover,
+        .tool-button:focus-visible {
+            border-color: #38bdf8;
+            background: #082f49;
+            color: #f8fafc;
+        }
+
+        .card-tools {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -82,6 +121,10 @@
             border-radius: 8px;
             padding: 16px;
             min-width: 0;
+        }
+
+        .card[hidden] {
+            display: none;
         }
 
         .card h2 {
@@ -137,11 +180,23 @@
   -> KairoGeometry
       -> KairoMath</div>
         </header>
+        <nav class="toolbar" aria-label="Visualizer panels">
+            <button type="button" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" data-filter="static" aria-pressed="false">Static acceleration</button>
+            <button type="button" data-filter="dynamic" aria-pressed="false">Dynamic tree</button>
+            <button type="button" data-filter="grid" aria-pressed="false">Grid</button>
+            <button type="button" data-filter="points" aria-pressed="false">KD points</button>
+            <button type="button" data-filter="graph" aria-pressed="false">Navigation</button>
+        </nav>
         <section class="grid">
-<section class="card">
+<section class="card is-active" id="bvh-panel" data-panel="bvh-panel" data-category="static">
 <div class="copy">
 <h2>BVH hierarchy and AABB query</h2>
 <p>Blue/green/orange boxes are geometry primitives. Gray dashed boxes are BVH hierarchy bounds. Yellow shows the query AABB.</p>
+</div>
+<div class="card-tools" aria-label="BVH hierarchy and AABB query controls">
+<button type="button" class="tool-button" data-action="focus">Focus</button>
+<button type="button" class="tool-button" data-action="reset-view">Reset view</button>
 </div>
 <svg viewBox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />
@@ -191,10 +246,14 @@ query ids = [102, 103]
 visited nodes = 5
 tested primitives = 4</pre>
 </section>
-<section class="card">
+<section class="card is-active" id="ray-panel" data-panel="ray-panel" data-category="static">
 <div class="copy">
 <h2>BVH ray traversal</h2>
 <p>The ray is tested against BVH bounds first, then primitive AABBs through the callback path used by future triangle ray tracing.</p>
+</div>
+<div class="card-tools" aria-label="BVH ray traversal controls">
+<button type="button" class="tool-button" data-action="focus">Focus</button>
+<button type="button" class="tool-button" data-action="reset-view">Reset view</button>
 </div>
 <svg viewBox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />
@@ -242,10 +301,14 @@ hits stored = 1
 visited nodes = 5
 tested primitives = 1</pre>
 </section>
-<section class="card">
+<section class="card is-active" id="dynamic-panel" data-panel="dynamic-panel" data-category="dynamic">
 <div class="copy">
 <h2>Dynamic AABB tree broadphase</h2>
 <p>Primitive tight bounds are drawn with colors by layer. Dashed gray bounds are internal fat bounds used for moving-object broadphase.</p>
+</div>
+<div class="card-tools" aria-label="Dynamic AABB tree broadphase controls">
+<button type="button" class="tool-button" data-action="focus">Focus</button>
+<button type="button" class="tool-button" data-action="reset-view">Reset view</button>
 </div>
 <svg viewBox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />
@@ -296,10 +359,14 @@ max balance = 3
 area ratio = 3.383
 valid = true</pre>
 </section>
-<section class="card">
+<section class="card is-active" id="hash-panel" data-panel="hash-panel" data-category="grid">
 <div class="copy">
 <h2>Spatial hash grid</h2>
 <p>Uniform grid cells are shown behind the geometry. The yellow circle is a near-neighbor radius query.</p>
+</div>
+<div class="card-tools" aria-label="Spatial hash grid controls">
+<button type="button" class="tool-button" data-action="focus">Focus</button>
+<button type="button" class="tool-button" data-action="reset-view">Reset view</button>
 </div>
 <svg viewBox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />
@@ -419,10 +486,14 @@ radius center = (0.00, 0.00, 0.00)
 radius ids = [102, 103, 104, 106]
 negative cell lookup id count = 1</pre>
 </section>
-<section class="card">
+<section class="card is-active" id="kd-panel" data-panel="kd-panel" data-category="points">
 <div class="copy">
 <h2>KDTree nearest-neighbor queries</h2>
 <p>Blue points are KD-tree samples. The red segment marks the nearest point from the yellow query point.</p>
+</div>
+<div class="card-tools" aria-label="KDTree nearest-neighbor queries controls">
+<button type="button" class="tool-button" data-action="focus">Focus</button>
+<button type="button" class="tool-button" data-action="reset-view">Reset view</button>
 </div>
 <svg viewBox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />
@@ -469,10 +540,14 @@ k nearest = [302, 303, 304]
 radius ids = [302, 303, 304]
 point count = 6</pre>
 </section>
-<section class="card">
+<section class="card is-active" id="nav-panel" data-panel="nav-panel" data-category="graph">
 <div class="copy">
 <h2>Navigation graph and A*</h2>
 <p>Gray edges are the navigation graph. Green highlights the shortest path found by A* using Euclidean heuristic.</p>
+</div>
+<div class="card-tools" aria-label="Navigation graph and A* controls">
+<button type="button" class="tool-button" data-action="focus">Focus</button>
+<button type="button" class="tool-button" data-action="reset-view">Reset view</button>
 </div>
 <svg viewBox="0 0 560 360" role="img">
 <rect width="100%" height="100%" rx="8" fill="#09111f" />

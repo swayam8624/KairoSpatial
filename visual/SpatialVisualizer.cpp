@@ -221,16 +221,23 @@ namespace
 
     [[nodiscard]]
     std::string Card(
+        std::string_view id,
+        std::string_view category,
         std::string_view title,
         std::string_view description,
         const Canvas& canvas,
         std::string_view metrics)
     {
         std::ostringstream out;
-        out << "<section class=\"card\">\n"
+        out << "<section class=\"card is-active\" id=\"" << id << "\" data-panel=\"" << id
+            << "\" data-category=\"" << category << "\">\n"
             << "<div class=\"copy\">\n"
             << "<h2>" << title << "</h2>\n"
             << "<p>" << description << "</p>\n"
+            << "</div>\n"
+            << "<div class=\"card-tools\" aria-label=\"" << title << " controls\">\n"
+            << "<button type=\"button\" class=\"tool-button\" data-action=\"focus\">Focus</button>\n"
+            << "<button type=\"button\" class=\"tool-button\" data-action=\"reset-view\">Reset view</button>\n"
             << "</div>\n"
             << canvas.Svg()
             << "<pre>" << metrics << "</pre>\n"
@@ -309,6 +316,8 @@ namespace
                 << "\ntested primitives = " << overlap.TestedPrimitives;
 
         return Card(
+            "bvh-panel",
+            "static",
             "BVH hierarchy and AABB query",
             "Blue/green/orange boxes are geometry primitives. Gray dashed boxes are BVH hierarchy bounds. Yellow shows the query AABB.",
             canvas,
@@ -372,6 +381,8 @@ namespace
                 << "\ntested primitives = " << raycast.TestedPrimitives;
 
         return Card(
+            "ray-panel",
+            "static",
             "BVH ray traversal",
             "The ray is tested against BVH bounds first, then primitive AABBs through the callback path used by future triangle ray tracing.",
             canvas,
@@ -433,6 +444,8 @@ namespace
                 << "\nvalid = " << (tree.Validate().Valid ? "true" : "false");
 
         return Card(
+            "dynamic-panel",
+            "dynamic",
             "Dynamic AABB tree broadphase",
             "Primitive tight bounds are drawn with colors by layer. Dashed gray bounds are internal fat bounds used for moving-object broadphase.",
             canvas,
@@ -481,6 +494,8 @@ namespace
                 << "\nnegative cell lookup id count = " << hash.QueryCell({ -4, -1, 0 }).size();
 
         return Card(
+            "hash-panel",
+            "grid",
             "Spatial hash grid",
             "Uniform grid cells are shown behind the geometry. The yellow circle is a near-neighbor radius query.",
             canvas,
@@ -547,6 +562,8 @@ namespace
                 << "\npoint count = " << points.size();
 
         return Card(
+            "kd-panel",
+            "points",
             "KDTree nearest-neighbor queries",
             "Blue points are KD-tree samples. The red segment marks the nearest point from the yellow query point.",
             canvas,
@@ -619,6 +636,8 @@ namespace
                 << "\npath = " << pathText.str();
 
         return Card(
+            "nav-panel",
+            "graph",
             "Navigation graph and A*",
             "Gray edges are the navigation graph. Green highlights the shortest path found by A* using Euclidean heuristic.",
             canvas,
@@ -721,6 +740,45 @@ int main()
             white-space: pre;
         }
 
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin: 0 0 18px;
+            padding: 12px;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            background: #0b1220;
+        }
+
+        .toolbar button,
+        .tool-button {
+            min-height: 34px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: #111827;
+            color: #dbeafe;
+            font: inherit;
+            font-size: 0.88rem;
+            cursor: pointer;
+            padding: 0 12px;
+        }
+
+        .toolbar button[aria-pressed="true"],
+        .tool-button:hover,
+        .tool-button:focus-visible {
+            border-color: #38bdf8;
+            background: #082f49;
+            color: #f8fafc;
+        }
+
+        .card-tools {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -736,6 +794,10 @@ int main()
             border-radius: 8px;
             padding: 16px;
             min-width: 0;
+        }
+
+        .card[hidden] {
+            display: none;
         }
 
         .card h2 {
@@ -791,6 +853,14 @@ int main()
   -> KairoGeometry
       -> KairoMath</div>
         </header>
+        <nav class="toolbar" aria-label="Visualizer panels">
+            <button type="button" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" data-filter="static" aria-pressed="false">Static acceleration</button>
+            <button type="button" data-filter="dynamic" aria-pressed="false">Dynamic tree</button>
+            <button type="button" data-filter="grid" aria-pressed="false">Grid</button>
+            <button type="button" data-filter="points" aria-pressed="false">KD points</button>
+            <button type="button" data-filter="graph" aria-pressed="false">Navigation</button>
+        </nav>
         <section class="grid">
 )";
 
