@@ -69,6 +69,11 @@ export namespace kairo::foundation::spatial
             SpatialID id,
             const SpatialAABB& bounds)
         {
+            if (!bounds.IsValid())
+            {
+                throw std::invalid_argument("SpatialHash::Insert failed: invalid bounds.");
+            }
+
             Remove(id);
 
             const GridCoord3 minCell = CellOf(bounds.Min);
@@ -127,15 +132,23 @@ export namespace kairo::foundation::spatial
             const GridCoord3& coord) const
         {
             auto found = m_Cells.find(coord);
-            return found == m_Cells.end()
+            std::vector<SpatialID> result = found == m_Cells.end()
                 ? std::vector<SpatialID>{}
                 : found->second;
+
+            std::sort(result.begin(), result.end());
+            return result;
         }
 
         [[nodiscard]]
         std::vector<SpatialID> QueryAABB(
             const SpatialAABB& bounds) const
         {
+            if (!bounds.IsValid())
+            {
+                throw std::invalid_argument("SpatialHash::QueryAABB failed: invalid bounds.");
+            }
+
             std::unordered_set<SpatialID> unique;
             const GridCoord3 minCell = CellOf(bounds.Min);
             const GridCoord3 maxCell = CellOf(bounds.Max);
@@ -165,7 +178,9 @@ export namespace kairo::foundation::spatial
                 }
             }
 
-            return std::vector<SpatialID>(unique.begin(), unique.end());
+            std::vector<SpatialID> result(unique.begin(), unique.end());
+            std::sort(result.begin(), result.end());
+            return result;
         }
 
         [[nodiscard]]
@@ -173,6 +188,11 @@ export namespace kairo::foundation::spatial
             const Vec3f& center,
             float radius) const
         {
+            if (radius < 0.0f)
+            {
+                return {};
+            }
+
             SpatialAABB query =
                 SpatialAABB::FromCenterExtent(
                     center,

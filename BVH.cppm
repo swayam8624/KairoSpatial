@@ -3,6 +3,7 @@ module;
 #include <cstdint>
 #include <cstddef>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 export module Kairo.Foundation.Spatial.BVH;
@@ -28,7 +29,7 @@ export namespace kairo::foundation::spatial
         SpatialIndex Right = SpatialInvalidIndex;
         SpatialIndex FirstPrimitive = 0;
         std::uint32_t PrimitiveCount = 0;
-        std::uint32_t Parent = SpatialInvalidIndex;
+        SpatialIndex Parent = SpatialInvalidIndex;
 
         [[nodiscard]]
         constexpr bool IsLeaf() const noexcept
@@ -42,8 +43,7 @@ export namespace kairo::foundation::spatial
         std::uint32_t MaxLeafSize = 4;
         std::uint32_t MaxDepth = 64;
         bool UseSAH = false;
-        std::uint32_t SAHBins = 12;
-        bool UseLBVH = false;
+        bool UseMortonOrdering = false;
     };
 
     struct BVHBuildStats final
@@ -67,7 +67,88 @@ export namespace kairo::foundation::spatial
         [[nodiscard]]
         bool Empty() const noexcept
         {
-            return Nodes.empty();
+            return
+                Nodes.empty() &&
+                Primitives.empty() &&
+                PrimitiveOrder.empty();
+        }
+
+        [[nodiscard]]
+        bool IsValid() const noexcept
+        {
+            if (Nodes.empty())
+            {
+                return Primitives.empty() && PrimitiveOrder.empty();
+            }
+
+            if (Primitives.empty() ||
+                PrimitiveOrder.size() != Primitives.size() ||
+                !Nodes[0].Bounds.IsValid())
+            {
+                return false;
+            }
+
+            for (SpatialIndex index : PrimitiveOrder)
+            {
+                if (index >= Primitives.size())
+                {
+                    return false;
+                }
+            }
+
+            for (std::size_t i = 0; i < Nodes.size(); ++i)
+            {
+                const BVHNode& node = Nodes[i];
+                if (!node.Bounds.IsValid())
+                {
+                    return false;
+                }
+
+                if (node.Parent != SpatialInvalidIndex &&
+                    node.Parent >= Nodes.size())
+                {
+                    return false;
+                }
+
+                if (node.IsLeaf())
+                {
+                    if (node.Left != SpatialInvalidIndex ||
+                        node.Right != SpatialInvalidIndex)
+                    {
+                        return false;
+                    }
+
+                    const std::size_t end =
+                        static_cast<std::size_t>(node.FirstPrimitive) +
+                        static_cast<std::size_t>(node.PrimitiveCount);
+
+                    if (end > PrimitiveOrder.size())
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (node.Left >= Nodes.size() ||
+                        node.Right >= Nodes.size() ||
+                        node.Left == node.Right ||
+                        Nodes[node.Left].Parent != i ||
+                        Nodes[node.Right].Parent != i)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        [[nodiscard]]
+        SpatialValidationResult Validate() const
+        {
+            return IsValid()
+                ? SpatialValidationResult{ true, {} }
+                : SpatialValidationResult{ false, "BVH node, primitive, or parent/child ranges are inconsistent." };
         }
 
         [[nodiscard]]

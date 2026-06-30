@@ -33,7 +33,7 @@ export namespace kairo::foundation::spatial
     {
         SpatialRaycastResult result;
 
-        if (bvh.Empty())
+        if (bvh.Empty() || !bvh.IsValid())
         {
             return result;
         }
@@ -78,6 +78,7 @@ export namespace kairo::foundation::spatial
                     {
                         hit->ID = primitive.UserID;
                         hit->PrimitiveIndex = primitive.UserIndex;
+                        result.Hits.push_back(*hit);
                         result.Hit = true;
                         result.Closest = *hit;
                         closestDistance = hit->Distance;
@@ -129,7 +130,7 @@ export namespace kairo::foundation::spatial
         float maxDistance = std::numeric_limits<float>::infinity(),
         SpatialLayerMask layerMask = ~SpatialLayerMask(0))
     {
-        if (bvh.Empty())
+        if (bvh.Empty() || !bvh.IsValid())
         {
             return false;
         }
@@ -185,7 +186,7 @@ export namespace kairo::foundation::spatial
         SpatialLayerMask layerMask = ~SpatialLayerMask(0))
     {
         SpatialOverlapResult result;
-        if (bvh.Empty() || !query.IsValid())
+        if (bvh.Empty() || !bvh.IsValid() || !query.IsValid())
         {
             return result;
         }
@@ -239,7 +240,7 @@ export namespace kairo::foundation::spatial
         SpatialLayerMask layerMask = ~SpatialLayerMask(0))
     {
         SpatialOverlapResult result;
-        if (bvh.Empty() || radius < 0.0f)
+        if (bvh.Empty() || !bvh.IsValid() || radius < 0.0f)
         {
             return result;
         }
@@ -304,7 +305,7 @@ export namespace kairo::foundation::spatial
         SpatialLayerMask layerMask = ~SpatialLayerMask(0))
     {
         SpatialOverlapResult result;
-        if (bvh.Empty())
+        if (bvh.Empty() || !bvh.IsValid())
         {
             return result;
         }

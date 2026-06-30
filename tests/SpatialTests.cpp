@@ -98,8 +98,29 @@ TEST_CASE("BVH builds correct root bounds", "[Spatial][BVH]")
     }
 
     REQUIRE(!bvh.Empty());
+    REQUIRE(bvh.IsValid());
+    REQUIRE(bvh.Validate().Valid);
     REQUIRE(bvh.Root().Bounds == brute);
     REQUIRE(bvh.Stats.PrimitiveCount == primitives.size());
+}
+
+TEST_CASE("BVH handles empty and single primitive cases", "[Spatial][BVH]")
+{
+    const BVH empty =
+        BuildBVH({});
+
+    REQUIRE(empty.Empty());
+    REQUIRE(empty.IsValid());
+    REQUIRE(QueryAABB(empty, Box(-1, -1, -1, 1, 1, 1)).IDs.empty());
+
+    const BVH single =
+        BuildBVH({ { 42, Box(0, 0, 0, 1, 1, 1), 2u } });
+
+    REQUIRE(!single.Empty());
+    REQUIRE(single.IsValid());
+    REQUIRE(single.Root().IsLeaf());
+    REQUIRE(QueryAABB(single, Box(-1, -1, -1, 2, 2, 2), 2u).IDs == std::vector<SpatialID>{ 42 });
+    REQUIRE(QueryAABB(single, Box(-1, -1, -1, 2, 2, 2), 4u).IDs.empty());
 }
 
 TEST_CASE("BVH leaf primitive count <= MaxLeafSize", "[Spatial][BVH]")
@@ -119,11 +140,11 @@ TEST_CASE("BVH leaf primitive count <= MaxLeafSize", "[Spatial][BVH]")
     }
 }
 
-TEST_CASE("BVH supports Morton LBVH build ordering", "[Spatial][BVH]")
+TEST_CASE("BVH supports Morton-ordered build path", "[Spatial][BVH]")
 {
     BVHBuildSettings settings;
     settings.MaxLeafSize = 2;
-    settings.UseLBVH = true;
+    settings.UseMortonOrdering = true;
 
     const BVH bvh =
         BuildBVH(SamplePrimitives(), settings);
@@ -136,7 +157,7 @@ TEST_CASE("BVH supports Morton LBVH build ordering", "[Spatial][BVH]")
 TEST_CASE("BVH raycast returns nearest primitive", "[Spatial][BVH]")
 {
     const std::vector<SpatialPrimitive> primitives = SamplePrimitives();
-    const BVH bvh = BuildBVH(primitives, { 2, 64, true, 12 });
+    const BVH bvh = BuildBVH(primitives, { 2, 64, true, false });
 
     const SpatialRay ray =
         SpatialRay::FromOriginDirection(
@@ -166,6 +187,7 @@ TEST_CASE("BVH raycast returns nearest primitive", "[Spatial][BVH]")
         Raycast(bvh, ray, hitBox, 100.0f);
 
     REQUIRE(result.Hit);
+    REQUIRE(!result.Hits.empty());
     REQUIRE(result.Closest.ID == 1);
     REQUIRE(std::abs(result.Closest.Distance - 7.0f) < 1.0e-5f);
 }
@@ -245,9 +267,48 @@ TEST_CASE("DynamicAABBTree insert/remove/update works", "[Spatial][DynamicAABBTr
     REQUIRE(raycast.Hit);
     REQUIRE(raycast.Closest.ID == 10);
 
+    REQUIRE_FALSE(tree.Update(proxy, Box(5.001f, 5.001f, 5.001f, 5.999f, 5.999f, 5.999f)));
+    REQUIRE(Sorted(tree.QueryAABB(Box(4, 4, 4, 7, 7, 7)).IDs) == std::vector<SpatialID>{ 10 });
+
     tree.Remove(proxy);
     REQUIRE(tree.QueryAABB(Box(4, 4, 4, 7, 7, 7)).IDs.empty());
     REQUIRE(tree.Validate().Valid);
+}
+
+TEST_CASE("DynamicAABBTree supports layer masks and rebuild without double fattening", "[Spatial][DynamicAABBTree]")
+{
+    DynamicAABBTree tree(0.5f);
+    const SpatialIndex a = tree.Insert(1, Box(0, 0, 0, 1, 1, 1), 0x1u);
+    const SpatialIndex b = tree.Insert(2, Box(0.25f, 0, 0, 1.25f, 1, 1), 0x2u);
+
+    REQUIRE(Sorted(tree.QueryAABB(Box(-1, -1, -1, 2, 2, 2), 0x1u).IDs) == std::vector<SpatialID>{ 1 });
+    REQUIRE(Sorted(tree.QueryAABB(Box(-1, -1, -1, 2, 2, 2), 0x2u).IDs) == std::vector<SpatialID>{ 2 });
+    REQUIRE(tree.ComputePairs(0x1u).empty());
+    REQUIRE(tree.ComputePairs().size() == 1);
+
+    const float before =
+        tree.Nodes()[a].FatBounds.Width();
+
+    tree.RebuildBottomUp();
+    tree.RebuildBottomUp();
+
+    const SpatialOverlapResult after =
+        tree.QueryAABB(Box(-1, -1, -1, 2, 2, 2));
+
+    REQUIRE(Sorted(after.IDs) == std::vector<SpatialID>{ 1, 2 });
+    REQUIRE(tree.Validate().Valid);
+    REQUIRE(tree.Stats().LeafCount == 2);
+
+    const auto& nodes = tree.Nodes();
+    for (const DynamicAABBTreeNode& node : nodes)
+    {
+        if (node.Allocated && node.IsLeaf() && node.UserID == 1)
+        {
+            REQUIRE(std::abs(node.FatBounds.Width() - before) < 1.0e-5f);
+        }
+    }
+
+    (void)b;
 }
 
 TEST_CASE("DynamicAABBTree returns same pairs as brute force", "[Spatial][DynamicAABBTree]")
@@ -308,6 +369,20 @@ TEST_CASE("SpatialHash radius query matches brute force", "[Spatial][SpatialHash
         BruteSphere(primitives, Vec3f{ 0, 0, 0 }, 2.1f));
 }
 
+TEST_CASE("SpatialHash validates bounds and gives deterministic negative-coordinate queries", "[Spatial][SpatialHash]")
+{
+    SpatialHash hash(1.0f);
+    hash.Insert(3, Box(-2, -2, -2, -1, -1, -1));
+    hash.Insert(1, Box(-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f));
+    hash.Insert(2, Box(0.25f, 0.25f, 0.25f, 2.25f, 2.25f, 2.25f));
+
+    REQUIRE(hash.QueryAABB(Box(-3, -3, -3, 3, 3, 3)) == std::vector<SpatialID>{ 1, 2, 3 });
+    REQUIRE(hash.QueryRadius(Vec3f::Zero(), -1.0f).empty());
+    REQUIRE_FALSE(hash.Remove(999));
+    REQUIRE_THROWS_AS(hash.Insert(9, SpatialAABB::Empty()), std::invalid_argument);
+    REQUIRE_THROWS_AS(hash.QueryAABB(SpatialAABB::Empty()), std::invalid_argument);
+}
+
 TEST_CASE("Octree AABB query matches brute force", "[Spatial][Octree]")
 {
     const std::vector<SpatialPrimitive> primitives = SamplePrimitives();
@@ -348,6 +423,27 @@ TEST_CASE("KDTree nearest matches brute force", "[Spatial][KDTree]")
     REQUIRE(nearest.has_value());
     REQUIRE(nearest->ID == 3);
     REQUIRE(tree.RadiusSearch(Vec3f{ 0.0f, 0.0f, 0.0f }, 0.5f).size() == 1);
+    REQUIRE(tree.RadiusSearch(Vec3f::Zero(), -1.0f).empty());
+    REQUIRE(tree.KNearest(Vec3f::Zero(), 0).empty());
+    REQUIRE(tree.KNearest(Vec3f::Zero(), 99).size() == points.size());
+    REQUIRE(tree.KNearest(Vec3f::Zero(), 2)[0].ID == 3);
+}
+
+TEST_CASE("KDTree handles empty tree and duplicate positions", "[Spatial][KDTree]")
+{
+    KDTree empty;
+    REQUIRE_FALSE(empty.NearestPoint(Vec3f::Zero()).has_value());
+    REQUIRE(empty.KNearest(Vec3f::Zero(), 3).empty());
+
+    KDTree duplicates(
+        {
+            { 1, Vec3f::Zero() },
+            { 2, Vec3f::Zero() },
+            { 3, Vec3f{ 10, 0, 0 } }
+        });
+
+    REQUIRE(duplicates.RadiusSearch(Vec3f::Zero(), 0.0f).size() == 2);
+    REQUIRE(duplicates.KNearest(Vec3f::Zero(), 2).size() == 2);
 }
 
 TEST_CASE("AStar finds shortest path on grid graph", "[Spatial][AStar]")
@@ -372,7 +468,7 @@ TEST_CASE("AStar finds shortest path on grid graph", "[Spatial][AStar]")
 
 TEST_CASE("Debug extraction returns expected number of boxes", "[Spatial][Debug]")
 {
-    const BVH bvh = BuildBVH(SamplePrimitives(), { 2, 64, false, 12 });
+    const BVH bvh = BuildBVH(SamplePrimitives(), { 2, 64, false, false });
     const std::vector<DebugBox> boxes = ExtractBVHBoxes(bvh);
 
     REQUIRE(boxes.size() == bvh.Nodes.size());

@@ -4,6 +4,7 @@ module;
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
@@ -16,6 +17,7 @@ export namespace kairo::foundation::spatial
 {
     struct DynamicAABBTreeNode final
     {
+        SpatialAABB TightBounds = SpatialAABB::Empty();
         SpatialAABB FatBounds = SpatialAABB::Empty();
         SpatialIndex Parent = SpatialInvalidIndex;
         SpatialIndex Left = SpatialInvalidIndex;
@@ -23,6 +25,7 @@ export namespace kairo::foundation::spatial
         SpatialIndex NextFree = SpatialInvalidIndex;
         std::uint32_t Height = 0;
         SpatialID UserID = SpatialInvalidID;
+        SpatialLayerMask LayerMask = 1u;
         bool Allocated = false;
 
         [[nodiscard]]
@@ -30,6 +33,15 @@ export namespace kairo::foundation::spatial
         {
             return Left == SpatialInvalidIndex;
         }
+    };
+
+    struct DynamicAABBTreeStats final
+    {
+        std::uint32_t Height = 0;
+        std::uint32_t MaxBalance = 0;
+        float AreaRatio = 0.0f;
+        std::uint32_t AllocatedNodeCount = 0;
+        std::uint32_t LeafCount = 0;
     };
 
     class DynamicAABBTree final
@@ -44,7 +56,8 @@ export namespace kairo::foundation::spatial
         [[nodiscard]]
         SpatialIndex Insert(
             SpatialID id,
-            const SpatialAABB& bounds)
+            const SpatialAABB& bounds,
+            SpatialLayerMask layerMask = 1u)
         {
             if (!bounds.IsValid())
             {
@@ -55,8 +68,10 @@ export namespace kairo::foundation::spatial
                 AllocateNode();
 
             DynamicAABBTreeNode& node = m_Nodes[leaf];
+            node.TightBounds = bounds;
             node.FatBounds = Expanded(bounds, m_FattenAmount);
             node.UserID = id;
+            node.LayerMask = layerMask;
             node.Height = 0;
             node.Allocated = true;
 
@@ -85,10 +100,12 @@ export namespace kairo::foundation::spatial
 
             if (m_Nodes[proxy].FatBounds.ContainsAABB(newBounds))
             {
+                m_Nodes[proxy].TightBounds = newBounds;
                 return false;
             }
 
             RemoveLeaf(proxy);
+            m_Nodes[proxy].TightBounds = newBounds;
             m_Nodes[proxy].FatBounds = Expanded(newBounds, m_FattenAmount);
             InsertLeaf(proxy);
             return true;
@@ -96,10 +113,11 @@ export namespace kairo::foundation::spatial
 
         [[nodiscard]]
         SpatialOverlapResult QueryAABB(
-            const SpatialAABB& query) const
+            const SpatialAABB& query,
+            SpatialLayerMask layerMask = ~SpatialLayerMask(0)) const
         {
             SpatialOverlapResult result;
-            if (m_Root == SpatialInvalidIndex)
+            if (m_Root == SpatialInvalidIndex || !query.IsValid())
             {
                 return result;
             }
@@ -119,8 +137,12 @@ export namespace kairo::foundation::spatial
 
                 if (node.IsLeaf())
                 {
-                    result.IDs.push_back(node.UserID);
-                    result.PrimitiveIndices.push_back(index);
+                    if ((node.LayerMask & layerMask) != 0 &&
+                        Intersects(node.TightBounds, query))
+                    {
+                        result.IDs.push_back(node.UserID);
+                        result.PrimitiveIndices.push_back(index);
+                    }
                 }
                 else
                 {
@@ -133,19 +155,22 @@ export namespace kairo::foundation::spatial
         }
 
         [[nodiscard]]
-        std::vector<SpatialPair> ComputePairs() const
+        std::vector<SpatialPair> ComputePairs(
+            SpatialLayerMask layerMask = ~SpatialLayerMask(0)) const
         {
             std::vector<SpatialPair> pairs;
 
             for (std::size_t i = 0; i < m_Nodes.size(); ++i)
             {
-                if (!m_Nodes[i].Allocated || !m_Nodes[i].IsLeaf())
+                if (!m_Nodes[i].Allocated ||
+                    !m_Nodes[i].IsLeaf() ||
+                    (m_Nodes[i].LayerMask & layerMask) == 0)
                 {
                     continue;
                 }
 
                 const SpatialOverlapResult overlaps =
-                    QueryAABB(m_Nodes[i].FatBounds);
+                    QueryAABB(m_Nodes[i].TightBounds, layerMask);
 
                 for (SpatialID id : overlaps.IDs)
                 {
@@ -173,9 +198,10 @@ export namespace kairo::foundation::spatial
         }
 
         [[nodiscard]]
-        SpatialRaycastResult Raycast(
+        SpatialRaycastResult RaycastBroadphase(
             const SpatialRay& ray,
-            float maxDistance = std::numeric_limits<float>::infinity()) const
+            float maxDistance = std::numeric_limits<float>::infinity(),
+            SpatialLayerMask layerMask = ~SpatialLayerMask(0)) const
         {
             SpatialRaycastResult result;
             if (m_Root == SpatialInvalidIndex)
@@ -200,18 +226,102 @@ export namespace kairo::foundation::spatial
 
                 if (node.IsLeaf())
                 {
+                    if ((node.LayerMask & layerMask) == 0)
+                    {
+                        continue;
+                    }
+
+                    float tightDistance = 0.0f;
+                    if (!RayIntersectsAABB(ray, node.TightBounds, maxDistance, tightDistance))
+                    {
+                        continue;
+                    }
+
                     ++result.TestedPrimitives;
-                    if (distance < result.Closest.Distance)
+                    if (tightDistance < result.Closest.Distance)
                     {
                         result.Hit = true;
                         result.Closest =
                         {
                             node.UserID,
                             index,
-                            distance,
-                            ray.GetPoint(distance),
+                            tightDistance,
+                            ray.GetPoint(tightDistance),
                             Vec3f::Zero()
                         };
+                    }
+                }
+                else
+                {
+                    stack.push_back(node.Left);
+                    stack.push_back(node.Right);
+                }
+            }
+
+            return result;
+        }
+
+        [[nodiscard]]
+        SpatialRaycastResult Raycast(
+            const SpatialRay& ray,
+            float maxDistance = std::numeric_limits<float>::infinity(),
+            SpatialLayerMask layerMask = ~SpatialLayerMask(0)) const
+        {
+            return RaycastBroadphase(
+                ray,
+                maxDistance,
+                layerMask);
+        }
+
+        template<typename PrimitiveHitCallback>
+        [[nodiscard]]
+        SpatialRaycastResult Raycast(
+            const SpatialRay& ray,
+            PrimitiveHitCallback&& primitiveHit,
+            float maxDistance = std::numeric_limits<float>::infinity(),
+            SpatialLayerMask layerMask = ~SpatialLayerMask(0)) const
+        {
+            SpatialRaycastResult result;
+            if (m_Root == SpatialInvalidIndex)
+            {
+                return result;
+            }
+
+            std::vector<SpatialIndex> stack{ m_Root };
+            float closestDistance = maxDistance;
+            while (!stack.empty())
+            {
+                const SpatialIndex index = stack.back();
+                stack.pop_back();
+
+                const DynamicAABBTreeNode& node = m_Nodes[index];
+                ++result.VisitedNodes;
+
+                float distance = 0.0f;
+                if (!RayIntersectsAABB(ray, node.FatBounds, closestDistance, distance))
+                {
+                    continue;
+                }
+
+                if (node.IsLeaf())
+                {
+                    if ((node.LayerMask & layerMask) == 0)
+                    {
+                        continue;
+                    }
+
+                    ++result.TestedPrimitives;
+                    std::optional<SpatialRayHit> hit =
+                        primitiveHit(index, node.UserID, ray);
+
+                    if (hit && hit->Distance >= 0.0f && hit->Distance <= closestDistance)
+                    {
+                        hit->ID = node.UserID;
+                        hit->PrimitiveIndex = index;
+                        result.Hits.push_back(*hit);
+                        result.Hit = true;
+                        result.Closest = *hit;
+                        closestDistance = hit->Distance;
                     }
                 }
                 else
@@ -237,8 +347,8 @@ export namespace kairo::foundation::spatial
                         SpatialPrimitive
                         {
                             node.UserID,
-                            node.FatBounds,
-                            1u
+                            node.TightBounds,
+                            node.LayerMask
                         });
                 }
             }
@@ -247,7 +357,7 @@ export namespace kairo::foundation::spatial
             for (const SpatialPrimitive& primitive : leaves)
             {
                 const SpatialIndex proxy =
-                    Insert(primitive.ID, primitive.Bounds);
+                    Insert(primitive.ID, primitive.Bounds, primitive.LayerMask);
 
                 (void)proxy;
             }
@@ -279,6 +389,13 @@ export namespace kairo::foundation::spatial
                     return { false, "DynamicAABBTree node has invalid bounds." };
                 }
 
+                if (node.IsLeaf() &&
+                    (!node.TightBounds.IsValid() ||
+                     !node.FatBounds.ContainsAABB(node.TightBounds)))
+                {
+                    return { false, "DynamicAABBTree leaf fat bounds do not contain tight bounds." };
+                }
+
                 if (!node.IsLeaf())
                 {
                     if (node.Left >= m_Nodes.size() || node.Right >= m_Nodes.size())
@@ -301,6 +418,53 @@ export namespace kairo::foundation::spatial
         SpatialIndex RootIndex() const noexcept
         {
             return m_Root;
+        }
+
+        [[nodiscard]]
+        DynamicAABBTreeStats Stats() const noexcept
+        {
+            DynamicAABBTreeStats stats;
+            if (m_Root != SpatialInvalidIndex)
+            {
+                stats.Height = m_Nodes[m_Root].Height;
+                const float rootArea = m_Nodes[m_Root].FatBounds.SurfaceArea();
+                float totalArea = 0.0f;
+
+                for (const DynamicAABBTreeNode& node : m_Nodes)
+                {
+                    if (!node.Allocated)
+                    {
+                        continue;
+                    }
+
+                    ++stats.AllocatedNodeCount;
+                    totalArea += node.FatBounds.SurfaceArea();
+
+                    if (node.IsLeaf())
+                    {
+                        ++stats.LeafCount;
+                    }
+                    else
+                    {
+                        const std::uint32_t leftHeight = m_Nodes[node.Left].Height;
+                        const std::uint32_t rightHeight = m_Nodes[node.Right].Height;
+                        const std::uint32_t balance =
+                            leftHeight > rightHeight
+                                ? leftHeight - rightHeight
+                                : rightHeight - leftHeight;
+
+                        stats.MaxBalance =
+                            std::max(stats.MaxBalance, balance);
+                    }
+                }
+
+                stats.AreaRatio =
+                    rootArea > 0.0f
+                        ? totalArea / rootArea
+                        : 0.0f;
+            }
+
+            return stats;
         }
 
         void Clear()

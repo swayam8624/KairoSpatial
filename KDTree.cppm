@@ -75,6 +75,11 @@ export namespace kairo::foundation::spatial
             const Vec3f& query,
             float radius) const
         {
+            if (radius < 0.0f)
+            {
+                return {};
+            }
+
             std::vector<KDNearestResult> result;
             SearchRadius(m_Root, query, radius * radius, result);
 
@@ -94,15 +99,25 @@ export namespace kairo::foundation::spatial
             const Vec3f& query,
             std::size_t k) const
         {
-            std::vector<KDNearestResult> all =
-                RadiusSearch(query, std::numeric_limits<float>::infinity());
-
-            if (all.size() > k)
+            if (k == 0 || m_Root == SpatialInvalidIndex)
             {
-                all.resize(k);
+                return {};
             }
 
-            return all;
+            std::priority_queue<HeapEntry> heap;
+            SearchKNearest(m_Root, query, k, heap);
+
+            std::vector<KDNearestResult> result;
+            result.reserve(heap.size());
+
+            while (!heap.empty())
+            {
+                result.push_back(heap.top().Result);
+                heap.pop();
+            }
+
+            std::reverse(result.begin(), result.end());
+            return result;
         }
 
         [[nodiscard]]
@@ -118,6 +133,18 @@ export namespace kairo::foundation::spatial
             SpatialIndex Left = SpatialInvalidIndex;
             SpatialIndex Right = SpatialInvalidIndex;
             std::uint32_t Axis = 0;
+        };
+
+        struct HeapEntry final
+        {
+            KDNearestResult Result;
+
+            [[nodiscard]]
+            bool operator<(
+                const HeapEntry& other) const noexcept
+            {
+                return Result.DistanceSquared < other.Result.DistanceSquared;
+            }
         };
 
         std::vector<KDPoint> m_Points;
@@ -236,6 +263,55 @@ export namespace kairo::foundation::spatial
                 {
                     SearchRadius(node.Left, query, radiusSquared, result);
                 }
+            }
+        }
+
+        void SearchKNearest(
+            SpatialIndex nodeIndex,
+            const Vec3f& query,
+            std::size_t k,
+            std::priority_queue<HeapEntry>& heap) const
+        {
+            if (nodeIndex == SpatialInvalidIndex)
+            {
+                return;
+            }
+
+            const Node& node = m_Nodes[nodeIndex];
+            const KDPoint& point = m_Points[node.PointIndex];
+            const float distanceSquared =
+                DistanceSquared(query, point.Position);
+
+            if (heap.size() < k)
+            {
+                heap.push({ KDNearestResult{ point.ID, point.Position, distanceSquared } });
+            }
+            else if (distanceSquared < heap.top().Result.DistanceSquared)
+            {
+                heap.pop();
+                heap.push({ KDNearestResult{ point.ID, point.Position, distanceSquared } });
+            }
+
+            const float delta =
+                AxisValue(query, node.Axis) -
+                AxisValue(point.Position, node.Axis);
+
+            const SpatialIndex nearChild =
+                delta <= 0.0f ? node.Left : node.Right;
+
+            const SpatialIndex farChild =
+                delta <= 0.0f ? node.Right : node.Left;
+
+            SearchKNearest(nearChild, query, k, heap);
+
+            const float worstDistanceSquared =
+                heap.size() < k
+                    ? std::numeric_limits<float>::infinity()
+                    : heap.top().Result.DistanceSquared;
+
+            if (delta * delta <= worstDistanceSquared)
+            {
+                SearchKNearest(farChild, query, k, heap);
             }
         }
     };

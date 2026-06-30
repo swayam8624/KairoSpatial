@@ -282,7 +282,7 @@ export namespace kairo::foundation::spatial
             }
 
             Split split =
-                bvh.Settings.UseLBVH
+                bvh.Settings.UseMortonOrdering
                     ? Split{ begin + ((end - begin) / 2), 0, 0.0f, end - begin > 1 }
                     : bvh.Settings.UseSAH
                     ? SAHSplit(bvh.Primitives, bvh.PrimitiveOrder, begin, end, bvh.Settings)
@@ -346,7 +346,7 @@ export namespace kairo::foundation::spatial
 
         if (!primitives.empty())
         {
-            if (settings.UseLBVH)
+            if (settings.UseMortonOrdering)
             {
                 bvh_builder_detail::SortByMorton(
                     bvh.Primitives,

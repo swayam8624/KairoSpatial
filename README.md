@@ -36,7 +36,7 @@ import Kairo.Foundation.Spatial.Debug;
 Static acceleration:
   - Median BVH
   - SAH BVH
-  - Morton/LBVH build ordering
+  - Morton-ordered BVH build path
   - Raycast, RaycastAny, AABB, sphere, frustum, point queries
 
 Dynamic broadphase:
@@ -81,6 +81,22 @@ SpatialUpdateStats
 `SpatialAABB` and `SpatialRay` intentionally reuse KairoGeometry's `AABBf` and
 `Rayf`, so Spatial does not duplicate primitive math or create a second geometry
 contract.
+
+## Foundation Dependency Chain
+
+`KairoSpatial` is the top layer in the current foundation stack:
+
+```text
+KairoSpatial
+  -> KairoGeometry
+      -> KairoMath
+```
+
+`KairoSpatial` links `KairoGeometry` through CMake and imports geometry modules
+for `AABBf`, `Rayf`, `Sphere`, and `Frustumf`. `KairoGeometry` links
+`KairoMath` for vectors, matrices, transforms, and scalar helpers. The
+dependency is one-way: Math does not call Geometry, and Geometry does not call
+Spatial, so the foundation layers remain acyclic.
 
 ## Validation
 
