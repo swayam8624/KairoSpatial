@@ -273,6 +273,7 @@ namespace
             << "</div>\n"
             << "<div class=\"card-tools\" aria-label=\"" << title << " controls\">\n"
             << "<button type=\"button\" class=\"tool-button\" data-action=\"focus\">Focus</button>\n"
+            << "<button type=\"button\" class=\"tool-button\" data-action=\"play\">Play</button>\n"
             << "<button type=\"button\" class=\"tool-button\" data-action=\"zoom-in\">Zoom in</button>\n"
             << "<button type=\"button\" class=\"tool-button\" data-action=\"zoom-out\">Zoom out</button>\n"
             << "<button type=\"button\" class=\"tool-button\" data-action=\"reset-view\">Reset view</button>\n"
@@ -922,6 +923,39 @@ int main()
             display: none;
         }
 
+        .ray-line,
+        .nearest-line,
+        .path-edge {
+            stroke-dasharray: 18 10;
+        }
+
+        .card.is-playing .ray-line,
+        .card.is-playing .nearest-line,
+        .card.is-playing .path-edge {
+            animation: dash-flow 1.1s linear infinite;
+        }
+
+        .card.is-playing .hit-point,
+        .card.is-playing .nearest-point,
+        .card.is-playing .graph-node {
+            animation: pulse-point 900ms ease-in-out infinite alternate;
+        }
+
+        @keyframes dash-flow {
+            to {
+                stroke-dashoffset: -56;
+            }
+        }
+
+        @keyframes pulse-point {
+            from {
+                opacity: 0.55;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
         .card h2 {
             margin: 0 0 6px;
             font-size: 1.1rem;
@@ -1080,6 +1114,12 @@ int main()
                     if (willFocus) {
                         card.scrollIntoView({ behavior: "smooth", block: "start" });
                     }
+                }
+
+                if (button.dataset.action === "play") {
+                    const willPlay = !card.classList.contains("is-playing");
+                    card.classList.toggle("is-playing", willPlay);
+                    button.textContent = willPlay ? "Pause" : "Play";
                 }
 
                 const svg = card.querySelector("svg");
