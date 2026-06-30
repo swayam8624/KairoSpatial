@@ -137,6 +137,31 @@
             max-height: 70vh;
         }
 
+        .inspector {
+            position: sticky;
+            bottom: 12px;
+            z-index: 5;
+            margin: 18px 0 0 auto;
+            width: min(460px, 100%);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: rgba(2,6,23,0.94);
+            color: #dbeafe;
+            padding: 12px;
+            box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+        }
+
+        .inspector strong {
+            display: block;
+            color: #f8fafc;
+            margin-bottom: 4px;
+        }
+
+        .is-selected {
+            filter: drop-shadow(0 0 8px rgba(250,204,21,0.9));
+            stroke-width: 4px;
+        }
+
         .card h2 {
             margin: 0 0 6px;
             font-size: 1.1rem;
@@ -610,11 +635,17 @@ expanded nodes = 5
 path = 1 -> 2 -> 3 -> 4 -> 5</pre>
 </section>
         </section>
+        <aside class="inspector" aria-live="polite">
+            <strong>Inspector</strong>
+            <span data-inspector-text>Hover, tap, or focus a spatial entity to inspect it.</span>
+        </aside>
     </main>
     <script>
         (() => {
             const cards = [...document.querySelectorAll(".card")];
             const filterButtons = [...document.querySelectorAll("[data-filter]")];
+            const inspector = document.querySelector("[data-inspector-text]");
+            let selectedElement = null;
 
             function applyFilter(filter) {
                 filterButtons.forEach((button) => {
@@ -653,6 +684,43 @@ path = 1 -> 2 -> 3 -> 4 -> 5</pre>
                     if (willFocus) {
                         card.scrollIntoView({ behavior: "smooth", block: "start" });
                     }
+                }
+            });
+
+            function describeSpatialElement(element) {
+                const card = element.closest(".card");
+                const panel = card ? card.querySelector("h2")?.textContent : "Spatial panel";
+                const kind = element.dataset.kind || "shape";
+                const id = element.dataset.id ? ` id=${element.dataset.id}` : "";
+                const layer = element.dataset.layer ? ` layer=${element.dataset.layer}` : "";
+                return `${panel}: ${kind}${id}${layer}`;
+            }
+
+            function selectSpatialElement(element) {
+                if (!element || !element.dataset.kind) {
+                    return;
+                }
+
+                if (selectedElement) {
+                    selectedElement.classList.remove("is-selected");
+                }
+
+                selectedElement = element;
+                selectedElement.classList.add("is-selected");
+                inspector.textContent = describeSpatialElement(selectedElement);
+            }
+
+            document.addEventListener("pointerover", (event) => {
+                const spatialElement = event.target.closest("[data-kind]");
+                if (spatialElement) {
+                    selectSpatialElement(spatialElement);
+                }
+            });
+
+            document.addEventListener("focusin", (event) => {
+                const spatialElement = event.target.closest("[data-kind]");
+                if (spatialElement) {
+                    selectSpatialElement(spatialElement);
                 }
             });
 
