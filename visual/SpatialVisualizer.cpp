@@ -273,6 +273,8 @@ namespace
             << "</div>\n"
             << "<div class=\"card-tools\" aria-label=\"" << title << " controls\">\n"
             << "<button type=\"button\" class=\"tool-button\" data-action=\"focus\">Focus</button>\n"
+            << "<button type=\"button\" class=\"tool-button\" data-action=\"zoom-in\">Zoom in</button>\n"
+            << "<button type=\"button\" class=\"tool-button\" data-action=\"zoom-out\">Zoom out</button>\n"
             << "<button type=\"button\" class=\"tool-button\" data-action=\"reset-view\">Reset view</button>\n"
             << "</div>\n"
             << canvas.Svg()
@@ -1067,11 +1069,42 @@ int main()
                 if (button.dataset.action === "focus") {
                     const willFocus = !card.classList.contains("is-focused");
                     cards.forEach((candidate) => candidate.classList.remove("is-focused"));
+                    cards.forEach((candidate) => {
+                        const focusButton = candidate.querySelector("[data-action='focus']");
+                        if (focusButton) {
+                            focusButton.textContent = "Focus";
+                        }
+                    });
                     card.classList.toggle("is-focused", willFocus);
                     button.textContent = willFocus ? "Unfocus" : "Focus";
                     if (willFocus) {
                         card.scrollIntoView({ behavior: "smooth", block: "start" });
                     }
+                }
+
+                const svg = card.querySelector("svg");
+                if (!svg) {
+                    return;
+                }
+
+                function setViewBox(parts) {
+                    svg.setAttribute("viewBox", parts.map((value) => Number(value.toFixed(3))).join(" "));
+                }
+
+                if (button.dataset.action === "zoom-in" || button.dataset.action === "zoom-out") {
+                    const viewBox = svg.getAttribute("viewBox").split(/\s+/).map(Number);
+                    const scale = button.dataset.action === "zoom-in" ? 0.82 : 1.22;
+                    const centerX = viewBox[0] + viewBox[2] * 0.5;
+                    const centerY = viewBox[1] + viewBox[3] * 0.5;
+                    viewBox[2] *= scale;
+                    viewBox[3] *= scale;
+                    viewBox[0] = centerX - viewBox[2] * 0.5;
+                    viewBox[1] = centerY - viewBox[3] * 0.5;
+                    setViewBox(viewBox);
+                }
+
+                if (button.dataset.action === "reset-view") {
+                    svg.setAttribute("viewBox", svg.dataset.defaultViewbox);
                 }
             });
 
