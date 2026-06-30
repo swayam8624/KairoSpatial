@@ -63,6 +63,9 @@ target_sources(KairoSpatial
 
 target_link_libraries(KairoSpatial PUBLIC KairoGeometry)
 
+add_executable(KairoSpatialVisual visual/SpatialVisualizer.cpp)
+target_link_libraries(KairoSpatialVisual PRIVATE KairoSpatial)
+
 if(KAIRO_SPATIAL_BUILD_TESTS)
     include(FetchContent)
     FetchContent_Declare(

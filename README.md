@@ -111,3 +111,30 @@ ctest --test-dir build --output-on-failure
 
 Spatial tests compare accelerated queries against brute-force checks wherever a
 direct brute-force baseline is meaningful.
+
+## Visualizer
+
+The visualizer is a generated HTML/SVG report backed by the real C++ modules:
+
+```bash
+cmake --build build --target KairoSpatialVisual
+./build/KairoSpatialVisual
+python3 visual/server.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:8093/spatial_visualizer.html
+```
+
+The report renders:
+
+```text
+BVH hierarchy and AABB queries
+BVH ray traversal
+Dynamic AABB tree broadphase stats and layer filtering
+Spatial hash grid/radius queries
+KDTree nearest-neighbor queries
+NavigationGraph + A* paths
+```
