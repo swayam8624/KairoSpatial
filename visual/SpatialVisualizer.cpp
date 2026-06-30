@@ -47,7 +47,8 @@ namespace
             const Vec3f& b,
             std::string_view color,
             float stroke = 2.0f,
-            std::string_view dash = "")
+            std::string_view dash = "",
+            std::string_view attributes = "")
         {
             Body << "<line x1=\"" << OriginX + a.x * Scale
                  << "\" y1=\"" << OriginY - a.y * Scale
@@ -62,6 +63,11 @@ namespace
                 Body << " stroke-dasharray=\"" << dash << "\"";
             }
 
+            if (!attributes.empty())
+            {
+                Body << " " << attributes;
+            }
+
             Body << " />\n";
         }
 
@@ -70,7 +76,8 @@ namespace
             std::string_view stroke,
             std::string_view fill,
             float strokeWidth = 2.0f,
-            std::string_view dash = "")
+            std::string_view dash = "",
+            std::string_view attributes = "")
         {
             const float x = OriginX + box.Min.x * Scale;
             const float y = OriginY - box.Max.y * Scale;
@@ -90,6 +97,11 @@ namespace
                 Body << " stroke-dasharray=\"" << dash << "\"";
             }
 
+            if (!attributes.empty())
+            {
+                Body << " " << attributes;
+            }
+
             Body << " />\n";
         }
 
@@ -98,36 +110,60 @@ namespace
             float radius,
             std::string_view stroke,
             std::string_view fill,
-            float strokeWidth = 2.0f)
+            float strokeWidth = 2.0f,
+            std::string_view attributes = "")
         {
             Body << "<circle cx=\"" << OriginX + center.x * Scale
                  << "\" cy=\"" << OriginY - center.y * Scale
                  << "\" r=\"" << radius * Scale
                  << "\" fill=\"" << fill
                  << "\" stroke=\"" << stroke
-                 << "\" stroke-width=\"" << strokeWidth << "\" />\n";
+                 << "\" stroke-width=\"" << strokeWidth << "\"";
+
+            if (!attributes.empty())
+            {
+                Body << " " << attributes;
+            }
+
+            Body << " />\n";
         }
 
         void PointMark(
             const Vec3f& point,
             std::string_view color,
-            float radius = 4.0f)
+            float radius = 4.0f,
+            std::string_view attributes = "")
         {
             Body << "<circle cx=\"" << OriginX + point.x * Scale
                  << "\" cy=\"" << OriginY - point.y * Scale
                  << "\" r=\"" << radius
-                 << "\" fill=\"" << color << "\" />\n";
+                 << "\" fill=\"" << color << "\"";
+
+            if (!attributes.empty())
+            {
+                Body << " " << attributes;
+            }
+
+            Body << " />\n";
         }
 
         void Label(
             const Vec3f& point,
             std::string_view text,
-            std::string_view color = "#e2e8f0")
+            std::string_view color = "#e2e8f0",
+            std::string_view attributes = "")
         {
             Body << "<text x=\"" << OriginX + point.x * Scale + 6.0f
                  << "\" y=\"" << OriginY - point.y * Scale - 6.0f
                  << "\" fill=\"" << color
-                 << "\" font-size=\"12\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\">"
+                 << "\" font-size=\"12\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\"";
+
+            if (!attributes.empty())
+            {
+                Body << " " << attributes;
+            }
+
+            Body << ">"
                  << text << "</text>\n";
         }
 
@@ -135,7 +171,7 @@ namespace
         std::string Svg() const
         {
             std::ostringstream out;
-            out << "<svg viewBox=\"0 0 " << Width << " " << Height << "\" role=\"img\">\n"
+            out << "<svg viewBox=\"0 0 " << Width << " " << Height << "\" data-default-viewbox=\"0 0 " << Width << " " << Height << "\" role=\"img\">\n"
                 << "<rect width=\"100%\" height=\"100%\" rx=\"8\" fill=\"#09111f\" />\n"
                 << "<g opacity=\"0.55\">\n";
 
@@ -266,8 +302,18 @@ namespace
                         ? "#22c55e"
                         : "#f97316");
 
-            canvas.RectWorld(primitive.Bounds, stroke, fill, 2.0f);
-            canvas.Label(primitive.Bounds.Center(), std::to_string(primitive.ID));
+            std::ostringstream attributes;
+            attributes << "class=\"spatial-primitive layer-" << primitive.LayerMask
+                       << "\" data-kind=\"primitive\" data-id=\"" << primitive.ID
+                       << "\" data-layer=\"" << primitive.LayerMask
+                       << "\" tabindex=\"0\"";
+
+            canvas.RectWorld(primitive.Bounds, stroke, fill, 2.0f, "", attributes.str());
+            canvas.Label(
+                primitive.Bounds.Center(),
+                std::to_string(primitive.ID),
+                "#e2e8f0",
+                "class=\"primitive-label\" data-label-for=\"" + std::to_string(primitive.ID) + "\"");
         }
     }
 
@@ -301,11 +347,12 @@ namespace
                 debugBox.Color.x > 0.5f ? "#22c55e" : "#475569",
                 "none",
                 debugBox.Color.x > 0.5f ? 1.5f : 1.0f,
-                debugBox.Color.x > 0.5f ? "" : "6 5");
+                debugBox.Color.x > 0.5f ? "" : "6 5",
+                debugBox.Color.x > 0.5f ? "class=\"bvh-leaf\" data-kind=\"leaf\"" : "class=\"bvh-node\" data-kind=\"node\"");
         }
 
         DrawPrimitiveSet(canvas, primitives);
-        canvas.RectWorld(query, "#eab308", "rgba(234,179,8,0.12)", 3.0f, "8 5");
+        canvas.RectWorld(query, "#eab308", "rgba(234,179,8,0.12)", 3.0f, "8 5", "class=\"query-shape\" data-kind=\"query\"");
 
         std::ostringstream metrics;
         metrics << "nodes = " << bvh.Nodes.size()
@@ -363,13 +410,13 @@ namespace
 
         Canvas canvas;
         DrawPrimitiveSet(canvas, primitives);
-        canvas.Line(ray.Origin, ray.GetPoint(9.5f), "#eab308", 3.0f);
-        canvas.PointMark(ray.Origin, "#eab308", 5.0f);
+        canvas.Line(ray.Origin, ray.GetPoint(9.5f), "#eab308", 3.0f, "", "class=\"ray-line\" data-kind=\"ray\"");
+        canvas.PointMark(ray.Origin, "#eab308", 5.0f, "class=\"ray-origin\" data-kind=\"ray-origin\"");
 
         if (raycast.Hit)
         {
-            canvas.PointMark(raycast.Closest.Position, "#ef4444", 6.0f);
-            canvas.Label(raycast.Closest.Position, "nearest");
+            canvas.PointMark(raycast.Closest.Position, "#ef4444", 6.0f, "class=\"hit-point\" data-kind=\"ray-hit\"");
+            canvas.Label(raycast.Closest.Position, "nearest", "#e2e8f0", "class=\"hit-label\"");
         }
 
         std::ostringstream metrics;
@@ -427,12 +474,12 @@ namespace
         {
             if (box.ID == SpatialInvalidID)
             {
-                canvas.RectWorld(box.Bounds, "#64748b", "none", 1.0f, "4 4");
+                canvas.RectWorld(box.Bounds, "#64748b", "none", 1.0f, "4 4", "class=\"dynamic-fat-bound\" data-kind=\"fat-bound\"");
             }
         }
 
         DrawPrimitiveSet(canvas, primitives);
-        canvas.RectWorld(layerQuery, "#eab308", "rgba(234,179,8,0.12)", 3.0f, "8 5");
+        canvas.RectWorld(layerQuery, "#eab308", "rgba(234,179,8,0.12)", 3.0f, "8 5", "class=\"query-shape\" data-kind=\"query\"");
 
         std::ostringstream metrics;
         metrics << "all query ids = [" << JoinIDs(all.IDs) << "]"
@@ -480,12 +527,14 @@ namespace
                     Box(static_cast<float>(x), static_cast<float>(y), -0.1f, static_cast<float>(x + 1), static_cast<float>(y + 1), 0.1f),
                     "#1e293b",
                     "none",
-                    1.0f);
+                    1.0f,
+                    "",
+                    "class=\"hash-cell\" data-kind=\"hash-cell\"");
             }
         }
 
         DrawPrimitiveSet(canvas, primitives);
-        canvas.CircleWorld(center, radius, "#eab308", "rgba(234,179,8,0.10)", 3.0f);
+        canvas.CircleWorld(center, radius, "#eab308", "rgba(234,179,8,0.10)", 3.0f, "class=\"query-shape\" data-kind=\"radius-query\"");
 
         std::ostringstream metrics;
         metrics << "cell size = 1.0"
@@ -527,20 +576,20 @@ namespace
             tree.RadiusSearch(query, 2.0f);
 
         Canvas canvas;
-        canvas.CircleWorld(query, 2.0f, "#eab308", "rgba(234,179,8,0.10)", 3.0f);
-        canvas.PointMark(query, "#eab308", 6.0f);
-        canvas.Label(query, "query");
+        canvas.CircleWorld(query, 2.0f, "#eab308", "rgba(234,179,8,0.10)", 3.0f, "class=\"query-shape\" data-kind=\"radius-query\"");
+        canvas.PointMark(query, "#eab308", 6.0f, "class=\"query-point\" data-kind=\"query-point\"");
+        canvas.Label(query, "query", "#e2e8f0", "class=\"query-label\"");
 
         for (const KDPoint& point : points)
         {
-            canvas.PointMark(point.Position, "#38bdf8", 5.0f);
-            canvas.Label(point.Position, std::to_string(point.ID));
+            canvas.PointMark(point.Position, "#38bdf8", 5.0f, "class=\"kd-point\" data-kind=\"kd-point\" data-id=\"" + std::to_string(point.ID) + "\" tabindex=\"0\"");
+            canvas.Label(point.Position, std::to_string(point.ID), "#e2e8f0", "class=\"kd-label\"");
         }
 
         if (nearest)
         {
-            canvas.Line(query, nearest->Position, "#ef4444", 3.0f);
-            canvas.PointMark(nearest->Position, "#ef4444", 7.0f);
+            canvas.Line(query, nearest->Position, "#ef4444", 3.0f, "", "class=\"nearest-line\" data-kind=\"nearest\"");
+            canvas.PointMark(nearest->Position, "#ef4444", 7.0f, "class=\"nearest-point\" data-kind=\"nearest\"");
         }
 
         std::vector<SpatialID> nearestIDs;
@@ -598,7 +647,7 @@ namespace
             {
                 if (edge.From < edge.To)
                 {
-                    canvas.Line(graph.Node(edge.From).Position, graph.Node(edge.To).Position, "#475569", 2.0f);
+                    canvas.Line(graph.Node(edge.From).Position, graph.Node(edge.To).Position, "#475569", 2.0f, "", "class=\"graph-edge\" data-kind=\"graph-edge\"");
                 }
             }
         }
@@ -609,13 +658,15 @@ namespace
                 graph.Node(path.Path[i - 1]).Position,
                 graph.Node(path.Path[i]).Position,
                 "#22c55e",
-                5.0f);
+                5.0f,
+                "",
+                "class=\"path-edge\" data-kind=\"path-edge\"");
         }
 
         for (const GraphNode& node : graph.Nodes())
         {
-            canvas.PointMark(node.Position, "#38bdf8", 6.0f);
-            canvas.Label(node.Position, std::to_string(node.ID));
+            canvas.PointMark(node.Position, "#38bdf8", 6.0f, "class=\"graph-node\" data-kind=\"graph-node\" data-id=\"" + std::to_string(node.ID) + "\" tabindex=\"0\"");
+            canvas.Label(node.Position, std::to_string(node.ID), "#e2e8f0", "class=\"graph-label\"");
         }
 
         std::ostringstream pathText;
