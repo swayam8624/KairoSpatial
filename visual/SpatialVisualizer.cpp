@@ -819,6 +819,34 @@ int main()
             border-right: 0;
         }
 
+        .summary-strip {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin: 0 0 18px;
+        }
+
+        .summary-item {
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            background: #0b1220;
+            padding: 10px 12px;
+            min-width: 0;
+        }
+
+        .summary-item span {
+            display: block;
+            color: #93a4b8;
+            font-size: 0.78rem;
+        }
+
+        .summary-item strong {
+            display: block;
+            color: #f8fafc;
+            font-size: 1.35rem;
+            line-height: 1.1;
+        }
+
         .toggle {
             display: inline-flex;
             align-items: center;
@@ -1029,6 +1057,12 @@ int main()
                 <label class="toggle"><input type="checkbox" data-kind-toggle="hash-cell" checked>Grid cells</label>
             </div>
         </nav>
+        <section class="summary-strip" aria-label="Visible scene summary">
+            <div class="summary-item"><span>Visible panels</span><strong data-summary="panels">0</strong></div>
+            <div class="summary-item"><span>Visible primitives</span><strong data-summary="primitives">0</strong></div>
+            <div class="summary-item"><span>Debug overlays</span><strong data-summary="overlays">0</strong></div>
+            <div class="summary-item"><span>Selected entity</span><strong data-summary="selected">none</strong></div>
+        </section>
         <section class="grid">
 )";
 
@@ -1047,7 +1081,24 @@ int main()
             const layerToggles = [...document.querySelectorAll("[data-layer-toggle]")];
             const kindToggles = [...document.querySelectorAll("[data-kind-toggle]")];
             const inspector = document.querySelector("[data-inspector-text]");
+            const summary = {
+                panels: document.querySelector("[data-summary='panels']"),
+                primitives: document.querySelector("[data-summary='primitives']"),
+                overlays: document.querySelector("[data-summary='overlays']"),
+                selected: document.querySelector("[data-summary='selected']")
+            };
             let selectedElement = null;
+
+            function isVisibleElement(element) {
+                return !element.closest("[hidden]") && !element.classList.contains("vis-hidden");
+            }
+
+            function updateSummary() {
+                summary.panels.textContent = cards.filter((card) => !card.hidden).length;
+                summary.primitives.textContent = [...document.querySelectorAll(".spatial-primitive")].filter(isVisibleElement).length;
+                summary.overlays.textContent = [...document.querySelectorAll(".bvh-node, .query-shape, .hash-cell")].filter(isVisibleElement).length;
+                summary.selected.textContent = selectedElement ? (selectedElement.dataset.id || selectedElement.dataset.kind || "shape") : "none";
+            }
 
             function applyFilter(filter) {
                 filterButtons.forEach((button) => {
@@ -1061,6 +1112,7 @@ int main()
                         card.classList.remove("is-focused");
                     }
                 });
+                updateSummary();
             }
 
             filterButtons.forEach((button) => {
@@ -1083,6 +1135,7 @@ int main()
                         element.classList.toggle("vis-hidden", !toggle.checked);
                     });
                 });
+                updateSummary();
             }
 
             [...layerToggles, ...kindToggles].forEach((toggle) => {
@@ -1169,6 +1222,7 @@ int main()
                 selectedElement = element;
                 selectedElement.classList.add("is-selected");
                 inspector.textContent = describeSpatialElement(selectedElement);
+                updateSummary();
             }
 
             document.addEventListener("pointerover", (event) => {
