@@ -8,6 +8,7 @@
 
 import Kairo.Foundation.Spatial;
 import Kairo.Foundation.Math.Vector;
+import Kairo.Foundation.Geometry.AABB;
 import Kairo.Foundation.Geometry.Frustum;
 
 using namespace kairo::foundation::spatial;
