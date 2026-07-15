@@ -12,6 +12,7 @@ module;
 export module Kairo.Foundation.Spatial.DynamicAABBTree;
 
 import Kairo.Foundation.Math.Vector;
+import Kairo.Foundation.Geometry.AABB;
 import Kairo.Foundation.Spatial.Types;
 
 export namespace kairo::foundation::spatial

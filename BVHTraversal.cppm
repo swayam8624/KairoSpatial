@@ -10,6 +10,7 @@ module;
 export module Kairo.Foundation.Spatial.BVHTraversal;
 
 import Kairo.Foundation.Math.Vector;
+import Kairo.Foundation.Geometry.AABB;
 import Kairo.Foundation.Geometry.Frustum;
 import Kairo.Foundation.Spatial.Types;
 import Kairo.Foundation.Spatial.BVH;

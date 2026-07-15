@@ -7,6 +7,7 @@ module;
 
 export module Kairo.Foundation.Spatial.SweepAndPrune;
 
+import Kairo.Foundation.Geometry.AABB;
 import Kairo.Foundation.Spatial.Types;
 
 export namespace kairo::foundation::spatial
