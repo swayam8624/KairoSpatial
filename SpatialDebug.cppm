@@ -1,6 +1,7 @@
 module;
 
 #include <array>
+#include <cstdint>
 #include <vector>
 
 export module Kairo.Foundation.Spatial.Debug;

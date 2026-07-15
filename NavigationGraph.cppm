@@ -2,6 +2,8 @@ module;
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
+#include <limits>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
