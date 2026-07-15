@@ -311,6 +311,36 @@ TEST_CASE("DynamicAABBTree supports layer masks and rebuild without double fatte
     (void)b;
 }
 
+TEST_CASE("DynamicAABBTree supplies deterministic sphere and ray candidates", "[Spatial][DynamicAABBTree]")
+{
+    DynamicAABBTree tree(0.0f);
+    [[maybe_unused]] const SpatialIndex left =
+        tree.Insert(30u, Box(-3.0f, -0.5f, -0.5f, -2.0f, 0.5f, 0.5f), 0x1u);
+    [[maybe_unused]] const SpatialIndex center =
+        tree.Insert(10u, Box(-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f), 0x1u);
+    [[maybe_unused]] const SpatialIndex right =
+        tree.Insert(20u, Box(2.0f, -0.5f, -0.5f, 3.0f, 0.5f, 0.5f), 0x2u);
+
+    const SpatialOverlapResult sphere =
+        tree.QuerySphere(Vec3f::Zero(), 1.0f);
+    REQUIRE(sphere.IDs == std::vector<SpatialID>{ 10u });
+    REQUIRE(sphere.TestedPrimitives == 1u);
+
+    const SpatialOverlapResult ray =
+        tree.QueryRay(
+            SpatialRay::FromOriginDirection(Vec3f{ -4.0f, 0.0f, 0.0f }, Vec3f::UnitX()),
+            8.0f);
+    REQUIRE(ray.IDs == std::vector<SpatialID>{ 10u, 20u, 30u });
+    REQUIRE(ray.TestedPrimitives == 3u);
+
+    const SpatialOverlapResult filtered =
+        tree.QueryRay(
+            SpatialRay::FromOriginDirection(Vec3f{ -4.0f, 0.0f, 0.0f }, Vec3f::UnitX()),
+            8.0f,
+            0x2u);
+    REQUIRE(filtered.IDs == std::vector<SpatialID>{ 20u });
+}
+
 TEST_CASE("DynamicAABBTree returns same pairs as brute force", "[Spatial][DynamicAABBTree]")
 {
     const std::vector<SpatialPrimitive> primitives = SamplePrimitives();

@@ -1,6 +1,7 @@
 module;
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -152,6 +153,133 @@ export namespace kairo::foundation::spatial
             }
 
             return result;
+        }
+
+        /// Input: a sphere expressed as a world-space center and positive radius.
+        /// Output: leaf identifiers whose tight AABBs overlap that sphere.
+        /// Task: provide a conservative, allocation-owned candidate set for
+        /// higher-level systems such as physics overlap queries. Callers still
+        /// perform their shape-specific narrowphase test after this traversal.
+        [[nodiscard]]
+        SpatialOverlapResult QuerySphere(
+            const Vec3f& center,
+            float radius,
+            SpatialLayerMask layerMask = ~SpatialLayerMask(0)) const
+        {
+            SpatialOverlapResult result;
+            if (m_Root == SpatialInvalidIndex ||
+                !std::isfinite(radius) || radius <= 0.0f)
+            {
+                return result;
+            }
+
+            std::vector<SpatialIndex> stack{ m_Root };
+            while (!stack.empty())
+            {
+                const SpatialIndex index = stack.back();
+                stack.pop_back();
+                const DynamicAABBTreeNode& node = m_Nodes[index];
+                ++result.VisitedNodes;
+
+                if (!OverlapsSphere(node.FatBounds, center, radius))
+                {
+                    continue;
+                }
+
+                if (node.IsLeaf())
+                {
+                    if ((node.LayerMask & layerMask) != 0u &&
+                        OverlapsSphere(node.TightBounds, center, radius))
+                    {
+                        ++result.TestedPrimitives;
+                        result.IDs.push_back(node.UserID);
+                        result.PrimitiveIndices.push_back(index);
+                    }
+                }
+                else
+                {
+                    stack.push_back(node.Left);
+                    stack.push_back(node.Right);
+                }
+            }
+
+            return result;
+        }
+
+        /// Input: normalized world-space ray, maximum distance, and layer mask.
+        /// Output: every finite-tree leaf whose tight AABB intersects the ray.
+        /// Task: expose broadphase candidates without applying nearest-hit
+        /// pruning, because a physics world must test exact shapes and support
+        /// multi-hit rays. Results are sorted by identifier for deterministic
+        /// callers independent of tree rotation history.
+        [[nodiscard]]
+        SpatialOverlapResult QueryRay(
+            const SpatialRay& ray,
+            float maxDistance = std::numeric_limits<float>::infinity(),
+            SpatialLayerMask layerMask = ~SpatialLayerMask(0)) const
+        {
+            SpatialOverlapResult result;
+            if (m_Root == SpatialInvalidIndex ||
+                std::isnan(maxDistance) || maxDistance <= 0.0f)
+            {
+                return result;
+            }
+
+            std::vector<SpatialIndex> stack{ m_Root };
+            while (!stack.empty())
+            {
+                const SpatialIndex index = stack.back();
+                stack.pop_back();
+                const DynamicAABBTreeNode& node = m_Nodes[index];
+                ++result.VisitedNodes;
+
+                float fatDistance = 0.0f;
+                if (!RayIntersectsAABB(ray, node.FatBounds, maxDistance, fatDistance))
+                {
+                    continue;
+                }
+
+                if (node.IsLeaf())
+                {
+                    float tightDistance = 0.0f;
+                    if ((node.LayerMask & layerMask) != 0u &&
+                        RayIntersectsAABB(ray, node.TightBounds, maxDistance, tightDistance))
+                    {
+                        ++result.TestedPrimitives;
+                        result.IDs.push_back(node.UserID);
+                        result.PrimitiveIndices.push_back(index);
+                    }
+                }
+                else
+                {
+                    stack.push_back(node.Left);
+                    stack.push_back(node.Right);
+                }
+            }
+
+            std::vector<std::size_t> order(result.IDs.size());
+            for (std::size_t i = 0; i < order.size(); ++i)
+            {
+                order[i] = i;
+            }
+
+            std::sort(order.begin(), order.end(), [&](std::size_t lhs, std::size_t rhs)
+            {
+                return result.IDs[lhs] < result.IDs[rhs];
+            });
+
+            SpatialOverlapResult sorted;
+            sorted.VisitedNodes = result.VisitedNodes;
+            sorted.TestedPrimitives = result.TestedPrimitives;
+            sorted.IDs.reserve(order.size());
+            sorted.PrimitiveIndices.reserve(order.size());
+            for (const std::size_t index : order)
+            {
+                sorted.IDs.push_back(result.IDs[index]);
+                sorted.PrimitiveIndices.push_back(result.PrimitiveIndices[index]);
+            }
+
+            return sorted;
         }
 
         [[nodiscard]]
