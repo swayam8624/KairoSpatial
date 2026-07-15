@@ -9,7 +9,7 @@ option(KAIRO_SPATIAL_BUILD_TESTS "Build KairoSpatial tests" ${PROJECT_IS_TOP_LEV
 
 # Direct consumers fetch the revision verified by the umbrella rather than the
 # moving default branch. Workspace and explicit source paths remain preferred.
-set(KAIRO_SPATIAL_GEOMETRY_REVISION 0dd716a24d64adf0c49617a3a0b1d3d08a4f1015)
+set(KAIRO_SPATIAL_GEOMETRY_REVISION 87c32babcf71f5bbc375398e4a15af48610569ab)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-Wall -Wextra -Wno-unused-parameter)
