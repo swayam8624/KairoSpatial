@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(KAIRO_SPATIAL_BUILD_TESTS "Build KairoSpatial tests" ${PROJECT_IS_TOP_LEVEL})
+option(KAIRO_SPATIAL_BUILD_VISUALIZER "Build the standalone KairoSpatial visualizer" ${PROJECT_IS_TOP_LEVEL})
 
 # Direct consumers fetch the revision verified by the umbrella rather than the
 # moving default branch. Workspace and explicit source paths remain preferred.
@@ -68,8 +69,10 @@ target_sources(KairoSpatial
 
 target_link_libraries(KairoSpatial PUBLIC KairoGeometry)
 
-add_executable(KairoSpatialVisual visual/SpatialVisualizer.cpp)
-target_link_libraries(KairoSpatialVisual PRIVATE KairoSpatial)
+if(KAIRO_SPATIAL_BUILD_VISUALIZER)
+    add_executable(KairoSpatialVisual visual/SpatialVisualizer.cpp)
+    target_link_libraries(KairoSpatialVisual PRIVATE KairoSpatial)
+endif()
 
 if(KAIRO_SPATIAL_BUILD_TESTS)
     # ExternalProject uses Git's version to decide whether recursive checkout

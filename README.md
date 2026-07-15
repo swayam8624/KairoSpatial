@@ -117,6 +117,10 @@ direct brute-force baseline is meaningful.
 The visualizer is a generated interactive HTML/SVG debugger backed by the real
 C++ modules:
 
+`KAIRO_SPATIAL_BUILD_VISUALIZER` defaults to `ON` for this standalone project
+and to `OFF` when a parent build explicitly controls optional developer tools.
+Enable it when configuring a parent build if the visualizer is needed.
+
 ```bash
 cmake --build build --target KairoSpatialVisual
 ./build/KairoSpatialVisual
