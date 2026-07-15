@@ -7,6 +7,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(KAIRO_SPATIAL_BUILD_TESTS "Build KairoSpatial tests" ${PROJECT_IS_TOP_LEVEL})
 
+# Direct consumers fetch the revision verified by the umbrella rather than the
+# moving default branch. Workspace and explicit source paths remain preferred.
+set(KAIRO_SPATIAL_GEOMETRY_REVISION 0dd716a24d64adf0c49617a3a0b1d3d08a4f1015)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 elseif(MSVC)
@@ -31,7 +35,8 @@ if(NOT TARGET KairoGeometry)
         FetchContent_Declare(
             KairoGeometry
             GIT_REPOSITORY https://github.com/swayam8624/KairoGeometry.git
-            GIT_TAG master
+            GIT_TAG ${KAIRO_SPATIAL_GEOMETRY_REVISION}
+            GIT_SHALLOW TRUE
         )
         FetchContent_MakeAvailable(KairoGeometry)
     endif()
