@@ -72,11 +72,20 @@ add_executable(KairoSpatialVisual visual/SpatialVisualizer.cpp)
 target_link_libraries(KairoSpatialVisual PRIVATE KairoSpatial)
 
 if(KAIRO_SPATIAL_BUILD_TESTS)
+    # ExternalProject uses Git's version to decide whether recursive checkout
+    # flags are supported. Declare the tool explicitly so standalone builds do
+    # not depend on another dependency having discovered it first.
+    find_package(Git REQUIRED)
     include(FetchContent)
     FetchContent_Declare(
         Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
         GIT_TAG v3.5.4
+        # Catch2 has no required submodules. Disabling recursive checkout also
+        # keeps FetchContent's isolated populate step independent of CMake's
+        # transient Git version variables.
+        GIT_SUBMODULES ""
+        GIT_SHALLOW TRUE
     )
     FetchContent_MakeAvailable(Catch2)
 
