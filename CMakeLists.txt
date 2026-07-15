@@ -10,7 +10,7 @@ option(KAIRO_SPATIAL_BUILD_VISUALIZER "Build the standalone KairoSpatial visuali
 
 # Direct consumers fetch the revision verified by the umbrella rather than the
 # moving default branch. Workspace and explicit source paths remain preferred.
-set(KAIRO_SPATIAL_GEOMETRY_REVISION 87c32babcf71f5bbc375398e4a15af48610569ab)
+set(KAIRO_SPATIAL_GEOMETRY_REVISION 480322f25d1ed51b0f78408427d1d36f1cc19577)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     add_compile_options(-Wall -Wextra -Wno-unused-parameter)
