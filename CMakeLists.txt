@@ -62,6 +62,7 @@ target_sources(KairoSpatial
             KDTree.cppm
             NavigationGraph.cppm
             AStar.cppm
+            NavMesh.cppm
             SpatialDebug.cppm
             KairoSpatial.cppm
 )
@@ -91,7 +92,7 @@ if(KAIRO_SPATIAL_BUILD_TESTS)
     )
     FetchContent_MakeAvailable(Catch2)
 
-    add_executable(SpatialTests tests/SpatialTests.cpp)
+    add_executable(SpatialTests tests/SpatialTests.cpp tests/NavMeshTests.cpp)
     target_link_libraries(SpatialTests PRIVATE KairoSpatial Catch2::Catch2WithMain)
 
     enable_testing()
