@@ -119,17 +119,19 @@ TEST_CASE("NavMesh reports disconnected destinations without fabricating a route
 TEST_CASE("NavMesh area costs influence A star route selection")
 {
     NavMesh mesh;
-    // Two equal-length two-hop routes connect left to right. The upper route
-    // has an expensive middle polygon and must lose to the lower route.
-    mesh.AddPolygon(1u, Square(0.0f, 0.0f, 2.0f, 4.0f));
-    mesh.AddPolygon(2u, Square(2.0f, 2.0f, 4.0f, 4.0f), 25.0f);
+    // Opposite corners of a 2x2 grid have two equal-hop routes. Every
+    // adjacency is a complete authored shared edge, avoiding T-junctions.
+    // The upper-left polygon is expensive, so A* must choose the lower/right
+    // corridor 1 -> 3 -> 4 instead of 1 -> 2 -> 4.
+    mesh.AddPolygon(1u, Square(0.0f, 0.0f, 2.0f, 2.0f), 1.0f);
+    mesh.AddPolygon(2u, Square(0.0f, 2.0f, 2.0f, 4.0f), 25.0f);
     mesh.AddPolygon(3u, Square(2.0f, 0.0f, 4.0f, 2.0f), 1.0f);
-    mesh.AddPolygon(4u, Square(4.0f, 0.0f, 6.0f, 4.0f));
+    mesh.AddPolygon(4u, Square(2.0f, 2.0f, 4.0f, 4.0f), 1.0f);
     mesh.BuildAdjacency();
 
     const auto path = mesh.FindPath(
-        { 1.0f, 0.0f, 2.0f },
-        { 5.0f, 0.0f, 2.0f });
+        { 1.0f, 0.0f, 1.0f },
+        { 3.0f, 0.0f, 3.0f });
     REQUIRE(path.Reached);
     REQUIRE(path.Corridor.size() == 3u);
     CHECK(path.Corridor[0] == 1u);
