@@ -1,0 +1,90 @@
+name: KairoSpatial CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu Clang
+            os: ubuntu-latest
+            platform: linux
+          - name: macOS LLVM
+            os: macos-latest
+            platform: macos
+          - name: Windows MSVC
+            os: windows-2022
+            platform: windows
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Activate MSVC
+        if: matrix.platform == 'windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang ninja-build
+          echo "CC=$(command -v clang)" >> "$GITHUB_ENV"
+          echo "CXX=$(command -v clang++)" >> "$GITHUB_ENV"
+
+      - name: Install macOS dependencies
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: |
+          brew install cmake ninja llvm
+          echo "CC=$(brew --prefix llvm)/bin/clang" >> "$GITHUB_ENV"
+          echo "CXX=$(brew --prefix llvm)/bin/clang++" >> "$GITHUB_ENV"
+
+      - name: Configure
+        shell: bash
+        run: |
+          set -o pipefail
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DKAIRO_SPATIAL_BUILD_TESTS=ON \
+            -DKAIRO_SPATIAL_BUILD_VISUALIZER=OFF 2>&1 | tee configure.log
+
+      - name: Build
+        shell: bash
+        run: |
+          set -o pipefail
+          cmake --build build --parallel 2 2>&1 | tee build.log
+
+      - name: Test
+        shell: bash
+        run: |
+          set -o pipefail
+          ctest --test-dir build --output-on-failure 2>&1 | tee test.log
+
+      - name: Upload diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spatial-${{ matrix.platform }}-diagnostics
+          path: |
+            configure.log
+            build.log
+            test.log
+          if-no-files-found: ignore
+          retention-days: 7
