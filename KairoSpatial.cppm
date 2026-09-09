@@ -14,4 +14,5 @@ export import Kairo.Foundation.Spatial.KDTree;
 export import Kairo.Foundation.Spatial.NavigationGraph;
 export import Kairo.Foundation.Spatial.AStar;
 export import Kairo.Foundation.Spatial.NavMesh;
+export import Kairo.Foundation.Spatial.CrowdAvoidance;
 export import Kairo.Foundation.Spatial.Debug;
