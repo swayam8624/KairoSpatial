@@ -190,6 +190,7 @@ export namespace kairo::foundation::spatial
             std::size_t end,
             const BVHBuildSettings& settings)
         {
+            (void)settings;
             const std::size_t count = end - begin;
             if (count <= 2)
             {
