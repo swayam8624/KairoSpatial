@@ -7,6 +7,7 @@
 
 import Kairo.Foundation.Spatial;
 import Kairo.Foundation.Math.Vector;
+import Kairo.Foundation.Geometry.AABB;
 
 using namespace kairo::foundation::spatial;
 using kairo::foundation::math::Vec3f;
