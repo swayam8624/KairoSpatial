@@ -95,6 +95,7 @@ if(KAIRO_SPATIAL_BUILD_TESTS)
 
     add_executable(SpatialTests
         tests/SpatialTests.cpp
+        tests/ScaleStressTests.cpp
         tests/NavMeshTests.cpp
         tests/CrowdAvoidanceTests.cpp)
     target_link_libraries(SpatialTests PRIVATE KairoSpatial Catch2::Catch2WithMain)
