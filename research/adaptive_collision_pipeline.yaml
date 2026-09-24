@@ -1,0 +1,13 @@
+schema: kairo.research-track.v1
+track: R4
+title: Adaptive collision pipeline
+state: hypothesis
+role: broadphase_policy_and_scene_telemetry
+problem: Spatial density, motion and churn change which broadphase structure is efficient.
+hypothesis: Online scene telemetry can choose among dynamic tree, sweep-and-prune and spatial hash policies with lower p95 collision cost than one fixed policy while matching a brute-force overlap oracle.
+baselines: [dynamic_aabb_tree, sweep_and_prune, spatial_hash, brute_force_oracle]
+workloads: [sparse_fast_motion, dense_stack, high_churn, mixed_static_dynamic]
+metrics: [query_ms_p95, update_ms_p95, candidate_pair_count, missed_overlap_count, policy_switch_cost]
+ablations: [density_only, velocity_only, no_hysteresis]
+failure_cases: [oscillating_density, tiny_scenes, extreme_churn]
+falsification: Reject if adaptation cannot beat the strongest fixed policy after switch cost while preserving exact overlap correctness.
