@@ -136,7 +136,12 @@ export namespace kairo::foundation::spatial
                     open.push(
                         {
                             edge.To,
-                            tentative + heuristic(edge.To),
+                            // A sum of separately finite heuristic and
+                            // path values can still overflow. A finite path
+                            // cost is a valid conservative queue priority.
+                            std::isfinite(tentative + heuristic(edge.To))
+                                ? tentative + heuristic(edge.To)
+                                : tentative,
                             tentative
                         });
                 }
