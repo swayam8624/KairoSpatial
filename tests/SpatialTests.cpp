@@ -2,8 +2,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <optional>
 #include <set>
+#include <stdexcept>
 #include <vector>
 
 import Kairo.Foundation.Spatial;
@@ -495,6 +497,50 @@ TEST_CASE("AStar finds shortest path on grid graph", "[Spatial][AStar]")
     REQUIRE(result.Found);
     REQUIRE(result.Cost == 2.0f);
     REQUIRE(result.Path == std::vector<NavigationNodeID>{ 0, 1, 2 });
+}
+
+TEST_CASE("AStar keeps optimality with costs below Euclidean distance", "[Spatial][AStar]")
+{
+    // The old unscaled heuristic popped goal (cost 5) before evaluating node 2.
+    // Shortest cost is 2, despite the detour spanning a much longer distance.
+    NavigationGraph graph;
+    graph.AddNode(0, Vec3f{ 0, 0, 0 });
+    graph.AddNode(1, Vec3f{ 1, 0, 0 });
+    graph.AddNode(2, Vec3f{ 100, 0, 0 });
+    graph.AddEdge(0, 1, 5.0f, false);
+    graph.AddEdge(0, 2, 1.0f, false);
+    graph.AddEdge(2, 1, 1.0f, false);
+
+    const auto path = FindPathAStar(graph, 0, 1);
+    REQUIRE(path.Found);
+    REQUIRE(path.Cost == 2.0f);
+    REQUIRE(path.Path == std::vector<NavigationNodeID>{ 0, 2, 1 });
+}
+
+TEST_CASE("AStar supports zero-cost travel links without losing optimality", "[Spatial][AStar]")
+{
+    NavigationGraph graph;
+    graph.AddNode(0, Vec3f{ 0, 0, 0 });
+    graph.AddNode(1, Vec3f{ 1, 0, 0 });
+    graph.AddNode(2, Vec3f{ 100, 0, 0 });
+    graph.AddEdge(0, 1, 1.0f, false);
+    graph.AddEdge(0, 2, 0.0f, false);
+    graph.AddEdge(2, 1, 0.0f, false);
+
+    const auto path = FindPathAStar(graph, 0, 1);
+    REQUIRE(path.Found);
+    REQUIRE(path.Cost == 0.0f);
+    REQUIRE(path.Path == std::vector<NavigationNodeID>{ 0, 2, 1 });
+}
+
+TEST_CASE("NavigationGraph rejects nonfinite inputs to preserve search invariants", "[Spatial][AStar]")
+{
+    NavigationGraph graph;
+    REQUIRE_THROWS_AS(graph.AddNode(0, Vec3f{ std::nanf(""), 0, 0 }), std::invalid_argument);
+    graph.AddNode(0, Vec3f{ 0, 0, 0 });
+    graph.AddNode(1, Vec3f{ 1, 0, 0 });
+    REQUIRE_THROWS_AS(graph.AddEdge(0, 1, std::nanf("")), std::invalid_argument);
+    REQUIRE_THROWS_AS(graph.AddEdge(0, 1, std::numeric_limits<float>::infinity()), std::invalid_argument);
 }
 
 TEST_CASE("Debug extraction returns expected number of boxes", "[Spatial][Debug]")

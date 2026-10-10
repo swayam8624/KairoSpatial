@@ -1,6 +1,7 @@
 module;
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <limits>
@@ -32,6 +33,7 @@ export namespace kairo::foundation::spatial
         {
             NavigationNodeID ID = InvalidNavigationNodeID;
             float Priority = 0.0f;
+            float Cost = 0.0f;
 
             [[nodiscard]]
             bool operator<(
@@ -47,17 +49,45 @@ export namespace kairo::foundation::spatial
             return result;
         }
 
+        // Raw Euclidean distance is not necessarily a lower cost bound:
+        // graph edges may cost less than their geometric lengths (teleports,
+        // roads, different movement units). Establish the smallest per-unit
+        // edge cost so h(u)=scale*distance(u, goal) remains admissible AND
+        // consistent by the triangle inequality. Zero-cost long edges yield
+        // Dijkstra's algorithm automatically; empty/degenerate graphs do too.
+        float heuristicScale = std::numeric_limits<float>::infinity();
+        for (const GraphNode& node : graph.Nodes())
+        {
+            for (const GraphEdge& edge : graph.EdgesFrom(node.ID))
+            {
+                const float distance = HeuristicEuclidean(graph, node.ID, edge.To);
+                if (!std::isfinite(distance))
+                {
+                    heuristicScale = 0.0f;
+                    break;
+                }
+                if (distance > 0.0f)
+                    heuristicScale = std::min(heuristicScale, edge.Cost / distance);
+            }
+            if (heuristicScale == 0.0f) break;
+        }
+        if (!std::isfinite(heuristicScale)) heuristicScale = 0.0f;
+
         std::priority_queue<OpenNode> open;
         std::unordered_map<NavigationNodeID, float> gScore;
         std::unordered_map<NavigationNodeID, NavigationNodeID> cameFrom;
 
         gScore[start] = 0.0f;
-        open.push({ start, HeuristicEuclidean(graph, start, goal) });
+        open.push({ start, heuristicScale * HeuristicEuclidean(graph, start, goal), 0.0f });
 
         while (!open.empty())
         {
-            const NavigationNodeID current = open.top().ID;
+            const OpenNode next = open.top();
             open.pop();
+            // Decrease-key is represented by a new entry in std::priority_queue.
+            // Ignore its older, more expensive copies rather than re-expanding.
+            if (next.Cost != gScore.at(next.ID)) continue;
+            const NavigationNodeID current = next.ID;
             ++result.ExpandedNodes;
 
             if (current == goal)
@@ -90,7 +120,8 @@ export namespace kairo::foundation::spatial
                     open.push(
                         {
                             edge.To,
-                            tentative + HeuristicEuclidean(graph, edge.To, goal)
+                            tentative + heuristicScale * HeuristicEuclidean(graph, edge.To, goal),
+                            tentative
                         });
                 }
             }
