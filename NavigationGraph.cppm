@@ -40,6 +40,8 @@ export namespace kairo::foundation::spatial
             NavigationNodeID id,
             const Vec3f& position)
         {
+            if (id == InvalidNavigationNodeID)
+                throw std::invalid_argument("Navigation node ID is reserved.");
             if (m_NodeLookup.contains(id))
             {
                 throw std::invalid_argument("NavigationGraph::AddNode failed: duplicate node id.");
@@ -50,9 +52,19 @@ export namespace kairo::foundation::spatial
                 throw std::invalid_argument("NavigationGraph::AddNode failed: position must be finite.");
             }
 
-            m_NodeLookup[id] = m_Nodes.size();
+            const std::size_t index = m_Nodes.size();
             m_Nodes.push_back({ id, position });
-            m_Adjacency[id] = {};
+            try
+            {
+                m_NodeLookup.emplace(id, index);
+                m_Adjacency.emplace(id, std::vector<GraphEdge>{});
+            }
+            catch (...)
+            {
+                m_NodeLookup.erase(id);
+                m_Nodes.pop_back();
+                throw;
+            }
         }
 
         void AddEdge(
@@ -69,11 +81,20 @@ export namespace kairo::foundation::spatial
                 throw std::invalid_argument("NavigationGraph::AddEdge failed: cost must be finite and non-negative.");
             }
 
-            m_Adjacency[from].push_back({ from, to, cost });
-
-            if (bidirectional)
+            auto& forward = m_Adjacency.at(from);
+            auto& reverse = m_Adjacency.at(to);
+            forward.push_back({ from, to, cost });
+            if (bidirectional && from != to)
             {
-                m_Adjacency[to].push_back({ to, from, cost });
+                try
+                {
+                    reverse.push_back({ to, from, cost });
+                }
+                catch (...)
+                {
+                    forward.pop_back();
+                    throw;
+                }
             }
         }
 
