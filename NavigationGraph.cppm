@@ -1,6 +1,7 @@
 module;
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -43,6 +44,11 @@ export namespace kairo::foundation::spatial
             {
                 throw std::invalid_argument("NavigationGraph::AddNode failed: duplicate node id.");
             }
+            if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
+                !std::isfinite(position.z))
+            {
+                throw std::invalid_argument("NavigationGraph::AddNode failed: position must be finite.");
+            }
 
             m_NodeLookup[id] = m_Nodes.size();
             m_Nodes.push_back({ id, position });
@@ -58,9 +64,9 @@ export namespace kairo::foundation::spatial
             RequireNode(from);
             RequireNode(to);
 
-            if (cost < 0.0f)
+            if (!std::isfinite(cost) || cost < 0.0f)
             {
-                throw std::invalid_argument("NavigationGraph::AddEdge failed: cost must be non-negative.");
+                throw std::invalid_argument("NavigationGraph::AddEdge failed: cost must be finite and non-negative.");
             }
 
             m_Adjacency[from].push_back({ from, to, cost });
