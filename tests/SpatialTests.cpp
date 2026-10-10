@@ -565,7 +565,7 @@ TEST_CASE("AStar retains valid ordering for finite nodes with overflowing distan
     const auto route = FindPathAStar(graph, 1u, 3u);
     REQUIRE(route.Found);
     REQUIRE(std::isfinite(route.Cost));
-    REQUIRE(route.Path == std::vector<NavigationNodeID>{ 1u, 2u, 3u });
+    REQUIRE((route.Path == std::vector<NavigationNodeID>{ 1u, 2u, 3u }));
     REQUIRE(std::abs(route.Cost - 5.0f) < 1.0e-5f);
 }
 
