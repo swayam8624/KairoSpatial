@@ -73,12 +73,25 @@ export namespace kairo::foundation::spatial
         }
         if (!std::isfinite(heuristicScale)) heuristicScale = 0.0f;
 
+        // Coordinates may be finite while their Euclidean distance
+        // overflows float. Multiplying an infinite distance by a Dijkstra
+        // fallback scale of zero gives NaN, violating priority_queue's
+        // ordering assumptions. Fall back to a true zero heuristic instead.
+        const auto heuristic = [&](NavigationNodeID id) -> float
+        {
+            if (!(heuristicScale > 0.0f)) return 0.0f;
+            const float distance = HeuristicEuclidean(graph, id, goal);
+            if (!std::isfinite(distance)) return 0.0f;
+            const float h = heuristicScale * distance;
+            return std::isfinite(h) ? h : 0.0f;
+        };
+
         std::priority_queue<OpenNode> open;
         std::unordered_map<NavigationNodeID, float> gScore;
         std::unordered_map<NavigationNodeID, NavigationNodeID> cameFrom;
 
         gScore[start] = 0.0f;
-        open.push({ start, heuristicScale * HeuristicEuclidean(graph, start, goal), 0.0f });
+        open.push({ start, heuristic(start), 0.0f });
 
         while (!open.empty())
         {
@@ -111,6 +124,9 @@ export namespace kairo::foundation::spatial
             {
                 const float tentative =
                     gScore[current] + edge.Cost;
+                // Finite edges may overflow when accumulated. Such a
+                // candidate cannot represent a valid finite path cost.
+                if (!std::isfinite(tentative)) continue;
 
                 if (!gScore.contains(edge.To) ||
                     tentative < gScore[edge.To])
@@ -120,7 +136,7 @@ export namespace kairo::foundation::spatial
                     open.push(
                         {
                             edge.To,
-                            tentative + heuristicScale * HeuristicEuclidean(graph, edge.To, goal),
+                            tentative + heuristic(edge.To),
                             tentative
                         });
                 }
