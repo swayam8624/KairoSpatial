@@ -533,6 +533,42 @@ TEST_CASE("AStar supports zero-cost travel links without losing optimality", "[S
     REQUIRE(path.Path == std::vector<NavigationNodeID>{ 0, 2, 1 });
 }
 
+TEST_CASE("NavigationGraph transactionally registers nodes and undirected self-links", "[Spatial][AStar]")
+{
+    NavigationGraph graph;
+    REQUIRE_THROWS_AS(graph.AddNode(InvalidNavigationNodeID, Vec3f::Zero()),
+        std::invalid_argument);
+    REQUIRE_FALSE(graph.Contains(InvalidNavigationNodeID));
+    REQUIRE(graph.Nodes().empty());
+
+    graph.AddNode(11u, Vec3f{ 0.0f, 0.0f, 0.0f });
+    graph.AddNode(22u, Vec3f{ 1.0f, 0.0f, 0.0f });
+    graph.AddEdge(11u, 22u, 2.0f, true);
+    REQUIRE(graph.EdgesFrom(11u).size() == 1u);
+    REQUIRE(graph.EdgesFrom(22u).size() == 1u);
+    graph.AddEdge(11u, 11u, 0.0f, true);
+    REQUIRE(graph.EdgesFrom(11u).size() == 2u);
+    REQUIRE(graph.EdgesFrom(11u).back().To == 11u);
+    REQUIRE(graph.Nodes().size() == 2u);
+    REQUIRE_THROWS_AS(graph.AddNode(11u, Vec3f::Zero()), std::invalid_argument);
+    REQUIRE(graph.Nodes().size() == 2u);
+}
+
+TEST_CASE("AStar retains valid ordering for finite nodes with overflowing distances", "[Spatial][AStar]")
+{
+    NavigationGraph graph;
+    graph.AddNode(1u, Vec3f{ -1.0e30f, 0.0f, 0.0f });
+    graph.AddNode(2u, Vec3f{  1.0e30f, 0.0f, 0.0f });
+    graph.AddNode(3u, Vec3f{  1.0e30f, 1.0e30f, 0.0f });
+    graph.AddEdge(1u, 2u, 3.0f, false);
+    graph.AddEdge(2u, 3u, 2.0f, false);
+    const auto route = FindPathAStar(graph, 1u, 3u);
+    REQUIRE(route.Found);
+    REQUIRE(std::isfinite(route.Cost));
+    REQUIRE(route.Path == std::vector<NavigationNodeID>{ 1u, 2u, 3u });
+    REQUIRE(std::abs(route.Cost - 5.0f) < 1.0e-5f);
+}
+
 TEST_CASE("NavigationGraph rejects nonfinite inputs to preserve search invariants", "[Spatial][AStar]")
 {
     NavigationGraph graph;
