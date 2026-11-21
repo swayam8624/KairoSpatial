@@ -57,6 +57,7 @@ export namespace kairo::foundation::spatial
         }
 
         [[nodiscard]]
+        /// TEACHING API: SpatialIndex Insert( — Allocate fat-AABB leaf proxy with stable user ID; refit ancestors after insertion. PhysicsEngine stores proxy separately from collider.
         SpatialIndex Insert(
             SpatialID id,
             const SpatialAABB& bounds,
@@ -91,6 +92,7 @@ export namespace kairo::foundation::spatial
         }
 
         [[nodiscard]]
+        /// TEACHING API: bool Update( — Avoid tree restructuring when new tight box remains inside fat bounds; otherwise remove/reinsert to recover valid traversal.
         bool Update(
             SpatialIndex proxy,
             const SpatialAABB& newBounds)
@@ -285,6 +287,7 @@ export namespace kairo::foundation::spatial
         }
 
         [[nodiscard]]
+        /// TEACHING API: std::vector<SpatialPair> ComputePairs( — Find canonically ordered candidate pairs using tree overlap, not exact collider-to-collider contact.
         std::vector<SpatialPair> ComputePairs(
             SpatialLayerMask layerMask = ~SpatialLayerMask(0)) const
         {
@@ -328,6 +331,7 @@ export namespace kairo::foundation::spatial
         }
 
         [[nodiscard]]
+        /// TEACHING API: SpatialRaycastResult RaycastBroadphase( — Traverse ray-vs-box intersections only; caller must still intersect real geometry to identify a surface hit.
         SpatialRaycastResult RaycastBroadphase(
             const SpatialRay& ray,
             float maxDistance = std::numeric_limits<float>::infinity(),
@@ -464,6 +468,7 @@ export namespace kairo::foundation::spatial
             return result;
         }
 
+        /// TEACHING API: void RebuildBottomUp( — Reconstruct tree from live leaf data to improve hierarchy quality; invalidates old internal node topology.
         void RebuildBottomUp()
         {
             std::vector<SpatialPrimitive> leaves;
@@ -494,6 +499,7 @@ export namespace kairo::foundation::spatial
         }
 
         [[nodiscard]]
+        /// TEACHING API: SpatialValidationResult Validate( — Audit tree parent links, leaf bounds and hierarchy invariants for debugging after insertions/removals.
         SpatialValidationResult Validate() const
         {
             if (m_Root == SpatialInvalidIndex)
