@@ -1,3 +1,9 @@
+// TEACHING MAP — SpatialHash.cppm
+// Discretizes world coordinates into hash buckets for approximate neighborhood candidates.
+// Physics/neighborhood consumers must validate exact distances after bucket lookup and
+// handle boundary cell crossings.
+// Read READING_ORDER.md for spatial query contracts, callers and tests.
+
 module;
 
 #include <algorithm>
