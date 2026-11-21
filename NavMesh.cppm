@@ -55,6 +55,7 @@ export namespace kairo::foundation::spatial
     class NavMesh final
     {
     public:
+        /// TEACHING API: void AddPolygon( — Validate polygon geometry and ID; topology must be rebuilt/connected before path search.
         void AddPolygon(
             NavPolygonID id,
             std::vector<Vec3f> vertices,
