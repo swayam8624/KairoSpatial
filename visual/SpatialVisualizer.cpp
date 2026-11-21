@@ -1,3 +1,8 @@
+// TEACHING MAP — visual/SpatialVisualizer.cpp
+// Visual debug playground for trees, bounds and path/neighbor queries. Use its screenshots
+// to inspect behavior, but rely on deterministic tests for correctness.
+// See READING_ORDER.md for the spatial algorithm and test sequence.
+
 #include <algorithm>
 #include <array>
 #include <cmath>
