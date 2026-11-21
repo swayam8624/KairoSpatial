@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Mutable AABB broadphase used by KairoPhysicsEngine Broadphase. Fat bounds reduce updates but produce
+// conservative candidates, not exact contacts.
+// See docs/SOURCE_READING_ORDER.md for related modules and tests.
+
 module;
 
 #include <algorithm>
