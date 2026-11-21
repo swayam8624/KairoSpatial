@@ -27,6 +27,7 @@ export namespace kairo::foundation::spatial
 
     template<typename PrimitiveHitCallback>
     [[nodiscard]]
+    /// TEACHING API: SpatialRaycastResult Raycast( — AABB tests prune nodes while callback performs exact primitive hit testing; tighten closest ray distance when a nearer hit is found.
     SpatialRaycastResult Raycast(
         const BVH& bvh,
         const SpatialRay& ray,
@@ -126,6 +127,7 @@ export namespace kairo::foundation::spatial
 
     template<typename PrimitiveHitCallback>
     [[nodiscard]]
+    /// TEACHING API: bool RaycastAny( — Short-circuit on first accepted callback hit; cheaper than finding closest when caller needs only occlusion.
     bool RaycastAny(
         const BVH& bvh,
         const SpatialRay& ray,
@@ -183,6 +185,7 @@ export namespace kairo::foundation::spatial
     }
 
     [[nodiscard]]
+    /// TEACHING API: SpatialOverlapResult QueryAABB( — Traverse bounding-box candidates and filter by layer mask; outputs are potential overlaps for downstream exact tests.
     SpatialOverlapResult QueryAABB(
         const BVH& bvh,
         const SpatialAABB& query,
@@ -302,6 +305,7 @@ export namespace kairo::foundation::spatial
     }
 
     [[nodiscard]]
+    /// TEACHING API: SpatialOverlapResult QueryFrustum( — Cull entire nodes with frustum plane tests, then report surviving primitive bounds as possible visible objects.
     SpatialOverlapResult QueryFrustum(
         const BVH& bvh,
         const Frustumf& frustum,
