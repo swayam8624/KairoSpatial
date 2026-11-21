@@ -25,6 +25,7 @@ export namespace kairo::foundation::spatial
     };
 
     [[nodiscard]]
+    /// TEACHING API: AStarResult FindPathAStar( — Priority queue explores graph nodes by current path cost plus admissible scaled-distance heuristic; returned graph path is not character motion.
     AStarResult FindPathAStar(
         const NavigationGraph& graph,
         NavigationNodeID start,
