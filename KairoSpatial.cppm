@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Umbrella module exporting acceleration and navigation interfaces, consumed by physics, ray queries
+// and runtime tools.
+// See docs/SOURCE_READING_ORDER.md for related modules and tests.
+
 export module Kairo.Foundation.Spatial;
 
 export import Kairo.Foundation.Spatial.Types;
