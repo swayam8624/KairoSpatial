@@ -1,3 +1,4 @@
+// TEACHING MODULE: Brute-force AABB and layer-mask queries over SpatialPrimitive records. Serves as an independent reference to compare accelerated BVH/tree/SAP results and catch missed candidates.
 module;
 
 #include <algorithm>
