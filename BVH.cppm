@@ -1,3 +1,8 @@
+// TEACHING MAP — BVH.cppm
+// Bounding volume hierarchy structure and node/access APIs. Builder constructs the
+// hierarchy, traversal tests query rays/boxes, and RayTracer consumes candidate hits.
+// See READING_ORDER.md for the query path and downstream KairoEngine consumers.
+
 module;
 
 #include <cstdint>
