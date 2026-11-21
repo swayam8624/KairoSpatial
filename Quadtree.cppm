@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Hierarchical 2D spatial subdivision. Understand coordinate bounds and subdivision thresholds before
+// using it for UI/world-space projected queries.
+// See docs/SOURCE_READING_ORDER.md for callers, tests and alternatives.
+
 module;
 
 #include <algorithm>
