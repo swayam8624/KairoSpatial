@@ -1,3 +1,4 @@
+// TEACHING FILE: Catch2 reference comparisons cover BVH, dynamic AABB tree, SAP, hash, quad/octrees, KDTree, navigation graph and debug outputs. Many checks compare accelerated candidates against brute-force Geometry queries; executing tests is needed for evidence.
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
