@@ -1,3 +1,4 @@
+// TEACHING FILE: Generates educational SVG/HTML snapshots of spatial trees, navigation and broadphase candidates using neutral geometry. Viewer outputs illustrate the algorithms; numeric tests remain the correctness oracle.
 #include <algorithm>
 #include <array>
 #include <cmath>
