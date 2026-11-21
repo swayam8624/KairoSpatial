@@ -1,3 +1,9 @@
+// TEACHING MAP — BVHBuilder.cppm
+// Builds BVH node topology and spatial bounds from geometry; traversal later uses this
+// structure without modifying original geometry. Build quality and memory cost differ from
+// query speed.
+// See READING_ORDER.md for the query path and downstream KairoEngine consumers.
+
 module;
 
 #include <algorithm>
