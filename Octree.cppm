@@ -1,3 +1,8 @@
+// TEACHING MAP — Octree.cppm
+// Hierarchical 3D spatial partitioning for broad range, ray or region queries. Node
+// capacity/bounds and dynamic update policies affect correctness and memory cost.
+// Read READING_ORDER.md for spatial query contracts, callers and tests.
+
 module;
 
 #include <algorithm>
