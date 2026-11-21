@@ -1,3 +1,9 @@
+// TEACHING MAP — KairoSpatial.cppm
+// Umbrella C++23 exports for BVH, dynamic broadphase, spatial trees, query types and
+// navigation. PhysicsEngine and RayTracer import these acceleration APIs; they must still
+// independently validate their outputs.
+// See READING_ORDER.md for the query path and downstream KairoEngine consumers.
+
 export module Kairo.Foundation.Spatial;
 
 export import Kairo.Foundation.Spatial.Types;

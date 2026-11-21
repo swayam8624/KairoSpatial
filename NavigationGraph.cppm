@@ -1,3 +1,8 @@
+// TEACHING MAP — NavigationGraph.cppm
+// Graph nodes, adjacency and travel costs for path search. AStar consumes this contract;
+// scene mesh collision/agent kinematics are separate from shortest-path planning.
+// Read READING_ORDER.md for spatial query contracts, callers and tests.
+
 module;
 
 #include <algorithm>

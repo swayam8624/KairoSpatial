@@ -1,3 +1,8 @@
+// TEACHING MAP — tests/CrowdAvoidanceTests.cpp
+// Exercises dynamic steering/agent collision avoidance with deterministic fixtures; a
+// visually smooth crowd is not proof of exact collision prevention.
+// See READING_ORDER.md for the spatial algorithm and test sequence.
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>

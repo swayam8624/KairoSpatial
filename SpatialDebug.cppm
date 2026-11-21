@@ -1,3 +1,9 @@
+// TEACHING MAP — SpatialDebug.cppm
+// Converts spatial structures and query results to inspectable debug geometry for
+// editor/visualizer. It does not change the authoritative BVH, navmesh or physics solver
+// state.
+// See READING_ORDER.md for the spatial algorithm and test sequence.
+
 module;
 
 #include <array>

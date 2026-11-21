@@ -1,3 +1,8 @@
+// TEACHING MAP — SpatialTypes.cppm
+// Common spatial query geometry, result and handle types. Every BVH, hash, tree and graph
+// algorithm must agree on coordinate space and ownership of referenced geometry.
+// See READING_ORDER.md for the query path and downstream KairoEngine consumers.
+
 module;
 
 #include <algorithm>

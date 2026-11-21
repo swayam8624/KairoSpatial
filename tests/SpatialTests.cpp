@@ -1,3 +1,8 @@
+// TEACHING MAP — tests/SpatialTests.cpp
+// Checks spatial query correctness against known geometry or brute-force candidates. Query
+// acceleration is valid only when no true overlap/hit is missed.
+// See READING_ORDER.md for the spatial algorithm and test sequence.
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>

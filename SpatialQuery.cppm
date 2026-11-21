@@ -1,3 +1,9 @@
+// TEACHING MAP — SpatialQuery.cppm
+// Shared ray, overlap and nearest-neighbor queries used by BVH and spatial trees. Query
+// result ordering and tolerance are contracts that downstream collision/rendering systems
+// rely on.
+// See READING_ORDER.md for the query path and downstream KairoEngine consumers.
+
 module;
 
 #include <algorithm>

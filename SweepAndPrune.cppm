@@ -1,3 +1,9 @@
+// TEACHING MAP — SweepAndPrune.cppm
+// Sorting endpoint intervals for potential collision pairs; uses temporal coherence to
+// reduce candidate search. Compare exact candidate coverage against brute force for
+// moving/overlapping scenes.
+// See READING_ORDER.md for the query path and downstream KairoEngine consumers.
+
 module;
 
 #include <algorithm>

@@ -1,3 +1,7 @@
+> **Learning walkthrough:** [READING_ORDER.md](READING_ORDER.md) links every tracked source/test file in a recommended study order and explains the major API relationships.
+>
+> **Open source:** Original KairoSpatial code is licensed under [MIT](LICENSE) for studying, modification and further development; third-party dependencies retain their respective terms. Function-level comment coverage and exact-head integration verification are separate tasks.
+
 # KairoSpatial
 
 `KairoSpatial` is the engine spatial acceleration foundation. It keeps static
