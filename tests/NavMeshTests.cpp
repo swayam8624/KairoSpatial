@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Navigation tests exercise walkability/path constraints distinct from PhysicsEngine contact and
+// gameplay movement.
+// See docs/SOURCE_READING_ORDER.md.
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <stdexcept>
