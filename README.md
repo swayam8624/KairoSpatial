@@ -1,5 +1,7 @@
 # KairoSpatial
 
+**Learn spatial indexing:** [From AABBs to BVH and navigation](docs/SPATIAL_WALKTHROUGH.md) · [Source reading order](docs/SOURCE_READING_ORDER.md)
+
 `KairoSpatial` is the engine spatial acceleration foundation. It keeps static
 scene queries, dynamic broadphase, world partitioning, nearest-neighbor lookup,
 navigation graph search, and debug extraction behind one consistent spatial
