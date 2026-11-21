@@ -1,3 +1,8 @@
+// TEACHING MAP — tests/NavMeshTests.cpp
+// Checks navmesh construction, adjacency and path behavior including disconnected/degenerate
+// cases; pathfinding is distinct from collision physics.
+// See READING_ORDER.md for the spatial algorithm and test sequence.
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <stdexcept>
