@@ -1,3 +1,8 @@
+// TEACHING MAP — tests/ScaleStressTests.cpp
+// Stress and benchmark cases across high primitive counts and motion patterns. Keep
+// correctness oracles separate from timing summaries.
+// See READING_ORDER.md for the spatial algorithm and test sequence.
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
