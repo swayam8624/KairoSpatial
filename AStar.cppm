@@ -1,3 +1,9 @@
+// TEACHING MAP — AStar.cppm
+// Priority-guided shortest path over NavigationGraph. Heuristic admissibility and
+// tie-breaking influence optimality/determinism; it does not by itself generate a walkable
+// navmesh.
+// Read READING_ORDER.md for spatial query contracts, callers and tests.
+
 module;
 
 #include <algorithm>
