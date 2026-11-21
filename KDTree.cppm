@@ -1,3 +1,8 @@
+// TEACHING MAP — KDTree.cppm
+// Axis-split tree for nearest-neighbor and spatial point queries. Query pruning relies on
+// valid distance lower bounds; test ties and duplicate positions.
+// Read READING_ORDER.md for spatial query contracts, callers and tests.
+
 module;
 
 #include <algorithm>
