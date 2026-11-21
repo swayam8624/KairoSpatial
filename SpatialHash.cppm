@@ -1,3 +1,4 @@
+// TEACHING MODULE: Uniform voxel hash maps coordinates to integer cells for local neighborhood candidates. Cell size trades false positives, memory and update cost; exact intersections still use Geometry.
 module;
 
 #include <algorithm>
