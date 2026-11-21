@@ -1,3 +1,8 @@
+// TEACHING MAP — NavMesh.cppm
+// Walkable polygon/adjacency representation and route queries. CrowdAvoidance and runtime
+// agent paths use the output but collision resolution remains in PhysicsEngine.
+// Read READING_ORDER.md for spatial query contracts, callers and tests.
+
 module;
 
 #include <algorithm>
