@@ -1,3 +1,4 @@
+// TEACHING MODULE: FindPathAStar searches NavigationGraph using an admissible scaled Euclidean heuristic derived from cheapest edge cost per distance. Unlike arbitrary straight-line distance, this remains safe with cheap edges/teleports and falls back to Dijkstra when scale is zero. Returns node IDs and cost, not a NavMesh corridor or a moved character.
 module;
 
 #include <algorithm>
