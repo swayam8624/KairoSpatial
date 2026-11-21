@@ -1,3 +1,4 @@
+// TEACHING FILE: Catch2 verifies polygon validation, portal adjacency, corridor/funnel routing, area costs and disconnected paths. A valid route is not proof a dynamic character body can traverse it without collisions.
 #include <catch2/catch_test_macros.hpp>
 
 #include <stdexcept>
