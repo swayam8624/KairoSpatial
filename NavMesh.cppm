@@ -215,6 +215,7 @@ export namespace kairo::foundation::spatial
         /// Finds a polygon corridor with A* and converts it to a minimal corner
         /// chain with the classic funnel algorithm. Start/end may be slightly
         /// off-mesh and are snapped to the nearest polygon within snapDistance.
+        /// TEACHING API: FindPath — Plan polygon corridor and funnel waypoints from start to destination; PhysicsEngine remains responsible for actual dynamic movement.
         [[nodiscard]] NavMeshPath FindPath(
             const Vec3f& start,
             const Vec3f& end,
@@ -634,6 +635,7 @@ export namespace kairo::foundation::spatial
                 std::abs(a.z - b.z) <= epsilon;
         }
 
+        /// TEACHING API: Funnel — String-pull along oriented shared-edge portals to shorten waypoints while retaining path corridor bounds.
         [[nodiscard]] std::vector<Vec3f> Funnel(
             const Vec3f& start,
             const Vec3f& end,
