@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Static bounding-volume hierarchy representation. BVHBuilder builds and BVHTraversal queries;
+// acceleration candidates still require appropriate primitive intersections.
+// See docs/SOURCE_READING_ORDER.md for related modules and tests.
+
 module;
 
 #include <cstdint>
