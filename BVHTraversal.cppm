@@ -1,3 +1,8 @@
+// TEACHING MAP — BVHTraversal.cppm
+// Traverses BVH bounds for ray/shape queries and candidate primitives. Avoid false negatives
+// with conservative bounds and validate against brute-force reference intersections.
+// See READING_ORDER.md for the query path and downstream KairoEngine consumers.
+
 module;
 
 #include <algorithm>
