@@ -1,3 +1,4 @@
+// TEACHING MODULE: Sweep-and-prune broadphase indexes projected AABB intervals and tests candidate overlaps in other axes. Temporal coherence can help; dense overlapping scenes may be expensive.
 module;
 
 #include <algorithm>
