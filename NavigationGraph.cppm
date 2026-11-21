@@ -1,3 +1,4 @@
+// TEACHING MODULE: Directed weighted graph with validated finite node coordinates and edge costs. AStar uses stable NavigationNodeID to plan a route; this is distinct from NavMesh geometry and planar crowd steering.
 module;
 
 #include <algorithm>
