@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Extracts visual/debug descriptions of spatial trees and queries for inspection; rendering itself
+// belongs to KairoRenderer.
+// See docs/SOURCE_READING_ORDER.md.
+
 module;
 
 #include <array>
