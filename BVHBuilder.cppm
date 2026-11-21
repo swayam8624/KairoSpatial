@@ -1,4 +1,9 @@
 // TEACHING NOTE:
+// Builds BVH node topology from geometry bounds. Split choices affect build cost and query speed;
+// BVHTraversal consumes the resulting representation.
+// See docs/SOURCE_READING_ORDER.md for related modules and tests.
+
+// TEACHING NOTE:
 // Build logic for BVH nodes. Split choice affects build time and query behavior; BVHTraversal is the
 // consumer and correctness tests should check original geometry hits.
 // See docs/SOURCE_READING_ORDER.md for related modules and tests.
