@@ -120,6 +120,7 @@ export namespace kairo::foundation::spatial
             return x * 4u + y * 2u + z;
         }
 
+        /// TEACHING API: void SortByMorton( — Morton codes interleave quantized centroid coordinates to improve spatial ordering before building hierarchy.
         void SortByMorton(
             const std::vector<BVHPrimitive>& primitives,
             std::vector<SpatialIndex>& order)
@@ -255,6 +256,7 @@ export namespace kairo::foundation::spatial
             return best;
         }
 
+        /// TEACHING API: SpatialIndex BuildRecursive( — Recursively partition one primitive range and enclose its bounds, stopping at max leaf size/depth; parent/child index integrity matters.
         SpatialIndex BuildRecursive(
             BVH& bvh,
             std::size_t begin,
@@ -313,6 +315,7 @@ export namespace kairo::foundation::spatial
     }
 
     [[nodiscard]]
+    /// TEACHING API: BVH BuildBVH( — Build hierarchical AABB nodes for validated input primitives using chosen centroid/SAH/Morton split policy; output leaf order is consumed by BVHTraversal.
     BVH BuildBVH(
         const std::vector<SpatialPrimitive>& primitives,
         BVHBuildSettings settings = {})
