@@ -1,3 +1,4 @@
+// TEACHING MODULE: Loose hierarchical 3D bounds partition for scene indexing and culling. Insertion may keep an object at an ancestor if it spans child extents; shape contact tests occur outside this structure.
 module;
 
 #include <algorithm>
