@@ -30,6 +30,7 @@ export namespace kairo::foundation::spatial
     class SweepAndPrune final
     {
     public:
+        /// TEACHING API: void Insert( — Add new active AABB proxy; broadphase only tracks box intervals, not original mesh/contact.
         void Insert(
             SpatialID id,
             const SpatialAABB& bounds)
@@ -42,6 +43,7 @@ export namespace kairo::foundation::spatial
             m_Proxies.push_back({ id, bounds, true });
         }
 
+        /// TEACHING API: void UpdateProxy( — Replace AABB coordinates for a stable ID; next sweep must recompute valid overlap candidates.
         void UpdateProxy(
             SpatialID id,
             const SpatialAABB& bounds)
@@ -79,6 +81,7 @@ export namespace kairo::foundation::spatial
         }
 
         [[nodiscard]]
+        /// TEACHING API: std::vector<SpatialPair> ComputePairs( — Sort projected interval endpoints, check active interval pairs and other axes; broadphase complexity worsens when all bounds overlap.
         std::vector<SpatialPair> ComputePairs() const
         {
             std::vector<const SAPProxy*> sorted;
