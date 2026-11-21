@@ -1,3 +1,8 @@
+// TEACHING MAP — Quadtree.cppm
+// Hierarchical 2D spatial partitioning for planar world queries. Navigation/scene tools use
+// it; it should not be silently applied to truly 3D collision without a projection policy.
+// Read READING_ORDER.md for spatial query contracts, callers and tests.
+
 module;
 
 #include <algorithm>
