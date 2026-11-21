@@ -1,3 +1,4 @@
+// TEACHING MODULE: BVH records immutable-ish bounding-volume nodes, original primitives and primitive ordering. Every internal node encloses descendants; leaves reference bounded index ranges. BVHBuilder creates topology and BVHTraversal queries it. KairoRayTracer consumes candidate traversal and supplies exact primitive intersection, whereas BVH alone does not test triangles.
 module;
 
 #include <cstdint>
