@@ -1,3 +1,4 @@
+# # TEACHING BUILD: CMake assembles C++23 spatial modules against Math and Geometry with optional Catch2 tests and standalone visualization. Sibling/explicit paths should match the exact-head umbrella lock; source presence is not build acceptance.
 cmake_minimum_required(VERSION 3.28)
 project(KairoSpatial LANGUAGES CXX)
 
