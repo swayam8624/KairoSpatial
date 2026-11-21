@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Traverses BVH nodes to answer geometric queries; BVHBuilder supplies tree topology, while geometry
+// intersection functions determine primitive-level outcomes.
+// See docs/SOURCE_READING_ORDER.md for related modules and tests.
+
 module;
 
 #include <algorithm>
