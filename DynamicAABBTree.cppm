@@ -1,3 +1,4 @@
+// TEACHING MAP: Dynamic bounding-volume hierarchy supports cheap broadphase queries in KairoPhysicsEngine. Objects remain responsible for exact collision tests in Narrowphase; updates and proxies must preserve bounded spatial invariants.
 module;
 
 #include <algorithm>
