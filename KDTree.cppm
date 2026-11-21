@@ -1,3 +1,4 @@
+// TEACHING MODULE: KD tree indexes discrete Vec3f point samples via recursive axis splits for nearest-neighbor/radius queries. Unlike BVH, indexed primitives are points, not AABBs or triangles; query returns candidate point identity and squared distance.
 module;
 
 #include <algorithm>
