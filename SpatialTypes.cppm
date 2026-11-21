@@ -1,3 +1,4 @@
+// TEACHING MODULE: Defines shared SpatialID, SpatialAABB, SpatialRay, layer masks and query-result contracts. Geometry owns exact shape math; accelerators index reduced bounds and identifiers.
 module;
 
 #include <algorithm>
