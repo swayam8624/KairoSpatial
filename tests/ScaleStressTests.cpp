@@ -1,3 +1,4 @@
+// TEACHING FILE: Large deterministic workload compares BVH queries against brute force and stresses dynamic tree updates. This is a correctness test under selected scenes, not a comprehensive throughput benchmark.
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
