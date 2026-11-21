@@ -1,3 +1,4 @@
+// TEACHING MODULE: XZ-plane local crowd avoidance converts preferred velocities into suggested safe agent velocities. NavMesh/graph supplies global intent; PhysicsEngine/character controller applies actual movement, gravity, stepping and collisions. It is not a full physical simulator.
 module;
 
 #include <algorithm>
