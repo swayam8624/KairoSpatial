@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Graph nodes and edges for path search; AStar works on this representation while NavMesh supplies
+// walkable region information.
+// See docs/SOURCE_READING_ORDER.md for callers, tests and alternatives.
+
 module;
 
 #include <algorithm>

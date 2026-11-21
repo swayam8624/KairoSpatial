@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Maps world positions to grid cells for localized neighbor lookup. Cell sizing and coordinate hashing
+// influence candidate density, but geometric checks still determine exact overlap.
+// See docs/SOURCE_READING_ORDER.md for callers, tests and alternatives.
+
 module;
 
 #include <algorithm>

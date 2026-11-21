@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Local steering/avoidance tests complement global NavMesh/AStar planning, and should use explicit
+// deterministic agent setups.
+// See docs/SOURCE_READING_ORDER.md.
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>

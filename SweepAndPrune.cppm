@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Broadphase using sorted axis intervals to generate conservative overlap candidates. Compare with
+// DynamicAABBTree and use narrowphase geometry to validate actual contact.
+// See docs/SOURCE_READING_ORDER.md for callers, tests and alternatives.
+
 module;
 
 #include <algorithm>

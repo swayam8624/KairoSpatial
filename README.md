@@ -1,5 +1,7 @@
 # KairoSpatial
 
+> **Learn the implementation:** Follow the [linked source reading order](docs/SOURCE_READING_ORDER.md) to trace its types, APIs and downstream Kairo dependencies. Original project code and documentation are proposed under the [MIT License](LICENSE) for learning, reuse and further development. Third-party materials, if any, retain their own rights; review provenance before redistribution.
+
 `KairoSpatial` is the engine spatial acceleration foundation. It keeps static
 scene queries, dynamic broadphase, world partitioning, nearest-neighbor lookup,
 navigation graph search, and debug extraction behind one consistent spatial

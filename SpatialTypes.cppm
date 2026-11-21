@@ -1,3 +1,13 @@
+// TEACHING NOTE:
+// Shared spatial IDs and query primitives used by BVH, dynamic trees and navigation. Geometry AABB
+// defines mathematical bounds; spatial indices own acceleration structure state.
+// See docs/SOURCE_READING_ORDER.md for related modules and tests.
+
+// TEACHING NOTE:
+// Shared spatial IDs and query primitives used by BVH, dynamic trees and navigation. Geometry AABB
+// defines mathematical bounds, while spatial indices own acceleration structure state.
+// See docs/SOURCE_READING_ORDER.md for related modules and tests.
+
 module;
 
 #include <algorithm>

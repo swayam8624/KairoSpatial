@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Navigation mesh / polygon adjacency layer consumed by movement and route planning; CrowdAvoidance
+// adds local steering for nearby agents.
+// See docs/SOURCE_READING_ORDER.md for callers, tests and alternatives.
+
 module;
 
 #include <algorithm>

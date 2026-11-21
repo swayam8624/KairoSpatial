@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Shared spatial query language connects AABB/ray/frustum inputs to available indices. The accelerated
+// index supplies candidates while geometry routines determine primitive hits.
+// See docs/SOURCE_READING_ORDER.md for callers, tests and alternatives.
+
 module;
 
 #include <algorithm>

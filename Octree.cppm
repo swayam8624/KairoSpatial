@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Hierarchical 3D spatial subdivision. Query code narrows candidate regions before precise shape
+// tests; compare dynamic AABB trees for moving objects.
+// See docs/SOURCE_READING_ORDER.md for callers, tests and alternatives.
+
 module;
 
 #include <algorithm>

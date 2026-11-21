@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Graph path search; combines admissible heuristic assumptions with NavigationGraph neighbors. Output
+// path is a planning result, not automatic movement or physics integration.
+// See docs/SOURCE_READING_ORDER.md for callers, tests and alternatives.
+
 module;
 
 #include <algorithm>

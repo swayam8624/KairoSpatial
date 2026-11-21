@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Local multi-agent steering and avoidance complements NavMesh/global AStar routes; KairoGameEngine
+// runtime navigation consumes outputs and physics handles actual movement.
+// See docs/SOURCE_READING_ORDER.md for callers, tests and alternatives.
+
 module;
 
 #include <algorithm>
