@@ -1,3 +1,4 @@
+// TEACHING MODULE: Walkable polygon mesh supports portal corridors and funnel/string-pulling waypoints. Dynamic obstacles and actual character motion belong to physics/gameplay; NavMesh is a navigation representation, not exact collision detection.
 module;
 
 #include <algorithm>
