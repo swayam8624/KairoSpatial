@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# TEACHING FILE: Localhost-bound Python stdlib ThreadingHTTPServer serves static generated visualization. It neither runs source compilation nor executes tests and should remain bound to loopback.
 import os
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
