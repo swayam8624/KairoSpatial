@@ -1,3 +1,4 @@
+// TEACHING FILE: Catch2 examines planar preferred velocity, head-on conflict, overlapping agents, fixed obstacles, order invariance and nonfinite inputs; it does not simulate gravity or actual controller movement.
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
