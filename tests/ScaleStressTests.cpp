@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Scale/stress tests evaluate spatial index behavior under larger workloads; preserve dataset/seed and
+// report correctness alongside timing.
+// See docs/SOURCE_READING_ORDER.md.
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
