@@ -1,3 +1,8 @@
+// TEACHING NOTE:
+// Partitioning structure for nearest-neighbor/spatial point searches. Compare with BVH which is
+// optimized for bounding volumes and ray/shape queries.
+// See docs/SOURCE_READING_ORDER.md for callers, tests and alternatives.
+
 module;
 
 #include <algorithm>
