@@ -1,3 +1,4 @@
+// TEACHING MODULE: Converts BVH/dynamic-tree/octree bounds into neutral lines, boxes and spheres. Renderer owns GPU resources and drawing; visualization helps inspect tree behavior but does not certify correctness.
 module;
 
 #include <array>
