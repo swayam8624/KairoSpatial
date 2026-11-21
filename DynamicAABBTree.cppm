@@ -1,3 +1,9 @@
+// TEACHING MAP — DynamicAABBTree.cppm
+// Maintains dynamic bounding boxes with insert/remove/update and overlap queries.
+// PhysicsEngine uses these for broadphase candidates; a tree overlap is not a confirmed
+// contact.
+// See READING_ORDER.md for the query path and downstream KairoEngine consumers.
+
 module;
 
 #include <algorithm>
