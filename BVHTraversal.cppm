@@ -1,3 +1,4 @@
+// TEACHING MODULE: Traverses BVH with ray/AABB, overlap and frustum pruning. The caller-supplied primitive-hit callback performs real shape intersection; traversal only determines which leaf primitives to consider and tracks visited/tested counts. Closest hit updates max distance to prune later nodes.
 module;
 
 #include <algorithm>
