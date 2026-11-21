@@ -1,3 +1,4 @@
+// TEACHING MODULE: 2D rectangle partition for planar/screen-space queries with SpatialRect bounds; no height/depth information or exact 3D contact is stored.
 module;
 
 #include <algorithm>
