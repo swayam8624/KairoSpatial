@@ -1,3 +1,4 @@
+// TEACHING MODULE: Builds BVH hierarchy from finite SpatialPrimitive bounds using centroid splitting, optional surface-area heuristic and Morton ordering. Each node tracks an enclosing AABB; split policy trades build time, leaf count and traversal cost. RayTracer and broadphase consumers need the same primitive IDs and stable order.
 module;
 
 #include <algorithm>
