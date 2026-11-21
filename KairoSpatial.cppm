@@ -1,3 +1,4 @@
+// TEACHING MODULE: Umbrella C++23 module reexports trees, broadphase, queries, navigation and debug APIs. Importing it does not allocate a world or create a physics solver.
 export module Kairo.Foundation.Spatial;
 
 export import Kairo.Foundation.Spatial.Types;
