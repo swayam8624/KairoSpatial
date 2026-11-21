@@ -1,3 +1,9 @@
+// TEACHING MAP — CrowdAvoidance.cppm
+// Local agent separation/steering layered on navmesh/path guidance. Dynamic agent
+// constraints should not be confused with global shortest-path correctness or rigid-body
+// contact solving.
+// Read READING_ORDER.md for spatial query contracts, callers and tests.
+
 module;
 
 #include <algorithm>
