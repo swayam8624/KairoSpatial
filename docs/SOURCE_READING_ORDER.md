@@ -4,13 +4,15 @@ Acceleration structures and spatial query API between geometric primitives and h
 
 Follow source links sequentially. For each API/function, identify its input contract, owning data structure, called modules, failure modes, outputs, test and downstream consumers.
 
+**Worked exercise:** [Dynamic AABB tree proxy identity, fat-box update, ray query, memory growth and rebuild invalidation](DYNAMIC_AABB_TREE_INSERT_QUERY_REBUILD_LAB.md). It explains why candidate sets must be checked against an independent AABB overlap oracle.
+
 ## Read in this order
 
 Spatial indices answer *where to look first*, not necessarily *what collides*.
 Follow this sequence to understand the API and the implementation layers.
-See [KairoGeometry's guide](https://github.com/swayam8624/KairoGeometry/blob/docs/teaching-walkthrough-20261121/docs/SOURCE_READING_ORDER.md)
+See [KairoGeometry's guide](https://github.com/swayam8624/KairoGeometry/blob/main/docs/SOURCE_READING_ORDER.md)
 for primitive intersection rules and the
-[KairoPhysicsEngine collision guide](https://github.com/swayam8624/KairoPhysicsEngine/blob/docs/teaching-walkthrough-20261121/docs/SOURCE_READING_ORDER.md)
+[KairoPhysicsEngine collision guide](https://github.com/swayam8624/KairoPhysicsEngine/blob/main/docs/SOURCE_READING_ORDER.md)
 for the simulation consumer.
 
 ### Part A — Common contracts and static scene indexing
