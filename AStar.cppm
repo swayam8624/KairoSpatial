@@ -26,6 +26,10 @@ export namespace kairo::foundation::spatial
 
     [[nodiscard]]
     /// TEACHING API: AStarResult FindPathAStar( — Priority queue explores graph nodes by current path cost plus admissible scaled-distance heuristic; returned graph path is not character motion.
+    // Search a *directed weighted NavigationGraph*, not NavMesh geometry or
+    // rigid-body contacts. AStarResult holds a node path, summed traversal cost
+    // and expansions; the caller must separately steer the actor through a
+    // dynamic world.
     AStarResult FindPathAStar(
         const NavigationGraph& graph,
         NavigationNodeID start,
@@ -57,6 +61,10 @@ export namespace kairo::foundation::spatial
         // edge cost so h(u)=scale*distance(u, goal) remains admissible AND
         // consistent by the triangle inequality. Zero-cost long edges yield
         // Dijkstra's algorithm automatically; empty/degenerate graphs do too.
+        // Compute a lower bound on cost per Euclidean distance across graph edges.
+        // h(node)=scale*distance(node,goal) is then admissible when edge costs are
+        // nonnegative and path distances obey triangle inequality. Cheap teleports
+        // can force scale toward zero.
         float heuristicScale = std::numeric_limits<float>::infinity();
         for (const GraphNode& node : graph.Nodes())
         {
@@ -79,6 +87,9 @@ export namespace kairo::foundation::spatial
         // overflows float. Multiplying an infinite distance by a Dijkstra
         // fallback scale of zero gives NaN, violating priority_queue's
         // ordering assumptions. Fall back to a true zero heuristic instead.
+        // When the scaled Euclidean heuristic is nonfinite or zero, return a safe
+        // zero fallback (Dijkstra). Multiplying infinity by zero could produce NaN
+        // and violate priority_queue ordering.
         const auto heuristic = [&](NavigationNodeID id) -> float
         {
             if (!(heuristicScale > 0.0f)) return 0.0f;
@@ -88,6 +99,9 @@ export namespace kairo::foundation::spatial
             return std::isfinite(h) ? h : 0.0f;
         };
 
+        // Use a min-priority f=g+h heap via reversed comparison, a gScore map for
+        // best known path costs and cameFrom for reconstruction. Stale duplicate heap
+        // entries are skipped because std::priority_queue has no decrease-key.
         std::priority_queue<OpenNode> open;
         std::unordered_map<NavigationNodeID, float> gScore;
         std::unordered_map<NavigationNodeID, NavigationNodeID> cameFrom;
@@ -101,10 +115,16 @@ export namespace kairo::foundation::spatial
             open.pop();
             // Decrease-key is represented by a new entry in std::priority_queue.
             // Ignore its older, more expensive copies rather than re-expanding.
+            // This is lazy decrease-key: an improved route pushes another heap entry
+            // instead of mutating the old one. Discard outdated higher-cost entries
+            // before expanding neighbors.
             if (next.Cost != gScore.at(next.ID)) continue;
             const NavigationNodeID current = next.ID;
             ++result.ExpandedNodes;
 
+            // Once the consistent/admissible heuristic yields goal from the frontier,
+            // reconstruct predecessor IDs in reverse to start and then reverse the
+            // sequence. No character position is changed by path search.
             if (current == goal)
             {
                 result.Found = true;
@@ -124,6 +144,9 @@ export namespace kairo::foundation::spatial
 
             for (const GraphEdge& edge : graph.EdgesFrom(current))
             {
+                // Relax a directed edge only when its finite accumulated g cost beats the
+                // destination's previous cost. Overflowed float path sums are ignored rather
+                // than published as a valid route.
                 const float tentative =
                     gScore[current] + edge.Cost;
                 // Finite edges may overflow when accumulated. Such a
