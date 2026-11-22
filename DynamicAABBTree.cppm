@@ -78,6 +78,10 @@ export namespace kairo::foundation::spatial
 
         [[nodiscard]]
         /// TEACHING API: SpatialIndex Insert( — Allocate fat-AABB leaf proxy with stable user ID; refit ancestors after insertion. PhysicsEngine stores proxy separately from collider.
+        // Own a new *leaf proxy*, not a physics body or mesh. TightBounds
+        // is exact for the caller's AABB; FatBounds includes movement
+        // padding, reducing tree restructuring on nearby updates.
+        // The returned SpatialIndex is invalid after removal/rebuild.
         SpatialIndex Insert(
             SpatialID id,
             const SpatialAABB& bounds,
@@ -106,6 +110,9 @@ export namespace kairo::foundation::spatial
         // Deletes an index leaf and returns its node allocation to the
         // free list. The owning application must separately delete or
         // deactivate its real collider/primitive record.
+        // Detach the leaf and free its tree slot only. The caller
+        // still owns the associated primitive/ColliderID and is
+        // responsible for updating that authoritative record.
         void Remove(
             SpatialIndex proxy)
         {
@@ -116,6 +123,10 @@ export namespace kairo::foundation::spatial
 
         [[nodiscard]]
         /// TEACHING API: bool Update( — Avoid tree restructuring when new tight box remains inside fat bounds; otherwise remove/reinsert to recover valid traversal.
+        // Fast path: if newBounds is inside prior fat bounds, update
+        // the tight leaf only and return false (no reinsertion).
+        // Slow path: detach/reinsert the same leaf with new padding
+        // and return true. Broadphase still owns the proxy mapping.
         bool Update(
             SpatialIndex proxy,
             const SpatialAABB& newBounds)
@@ -143,6 +154,10 @@ export namespace kairo::foundation::spatial
         // Traverse fat hierarchy bounds for pruning, then check tight
         // bounds and masks on leaves. Returns candidate IDs, not actual
         // geometry intersections; physics narrowphase checks those.
+        // Iterative stack traversal prunes *fat internal* bounds;
+        // a leaf only qualifies if its tight AABB and layer mask
+        // intersect. IDs are conservative spatial candidates, not
+        // manifold or precise mesh triangle intersections.
         SpatialOverlapResult QueryAABB(
 
             const SpatialAABB& query,
@@ -192,6 +207,9 @@ export namespace kairo::foundation::spatial
         /// higher-level systems such as physics overlap queries. Callers still
         /// perform their shape-specific narrowphase test after this traversal.
         [[nodiscard]]
+        // Use sphere-vs-AABB rejection on the hierarchy and tight
+        // leaves, rather than a per-shape collision response.
+        // radius <= 0 or nonfinite radius yields no candidates.
         SpatialOverlapResult QuerySphere(
             const Vec3f& center,
             float radius,
@@ -244,6 +262,10 @@ export namespace kairo::foundation::spatial
         /// multi-hit rays. Results are sorted by identifier for deterministic
         /// callers independent of tree rotation history.
         [[nodiscard]]
+        // Collect *all* finite ray-vs-tight-AABB candidates and return
+        // ID-sorted results for deterministic callers. This function
+        // is not an exact raycast against spheres, capsules or meshes.
+        // PhysicsWorld::RaycastCollider resolves actual hit distances.
         SpatialOverlapResult QueryRay(
             const SpatialRay& ray,
             float maxDistance = std::numeric_limits<float>::infinity(),
@@ -318,6 +340,11 @@ export namespace kairo::foundation::spatial
         // Simpler correctness-first O(n * query-cost) sweep: query
         // each live leaf's tight bounds against the same tree, then
         // canonicalize/deduplicate. This may be costly for dense scenes.
+        // Correctness-first broadphase pairs: for every allocated
+        // leaf, query its tight bounds through the same tree. Pair
+        // duplicates and self-pairs are then normalized/removed.
+        // Work is roughly O(n * query cost) before sort/dedup and can
+        // be expensive for dense overlapping scenes.
         std::vector<SpatialPair> ComputePairs(
 
             SpatialLayerMask layerMask = ~SpatialLayerMask(0)) const
@@ -363,6 +390,9 @@ export namespace kairo::foundation::spatial
 
         [[nodiscard]]
         /// TEACHING API: SpatialRaycastResult RaycastBroadphase( — Traverse ray-vs-box intersections only; caller must still intersect real geometry to identify a surface hit.
+        // Track the closest *AABB* entry, not the true surface.
+        // Returning an AABB point/zero normal is deliberately less
+        // informative than a primitive-specific callback raycast.
         SpatialRaycastResult RaycastBroadphase(
             const SpatialRay& ray,
             float maxDistance = std::numeric_limits<float>::infinity(),
@@ -438,6 +468,10 @@ export namespace kairo::foundation::spatial
                 layerMask);
         }
 
+        // Callback overload: delegate the true intersection of a
+        // candidate primitive to user code and tighten the current
+        // maximum hit distance for subsequent subtree pruning.
+        // This preserves spatial indexing separate from geometry math.
         template<typename PrimitiveHitCallback>
         [[nodiscard]]
         SpatialRaycastResult Raycast(
@@ -503,6 +537,10 @@ export namespace kairo::foundation::spatial
         // WARNING: full Clear/Insert creates fresh node handles. Even if
         // UserID is preserved, an external cache of SpatialIndex proxies
         // must be rebuilt after this operation.
+        // Save live (UserID,TightBounds,Mask) records, Clear the tree
+        // and reinsert. This completely reallocates proxy indices:
+        // any external SpatialIndex cached by PhysicsEngine becomes
+        // stale and must be rederived from returned IDs before use.
         void RebuildBottomUp()
         {
             std::vector<SpatialPrimitive> leaves;
@@ -534,6 +572,10 @@ export namespace kairo::foundation::spatial
 
         [[nodiscard]]
         /// TEACHING API: SpatialValidationResult Validate( — Audit tree parent links, leaf bounds and hierarchy invariants for debugging after insertions/removals.
+        // Audit the hierarchy rather than assuming insertion always
+        // left correct links: check root, parent/child connectivity,
+        // heights, bounding enclosure and leaf allocation invariants.
+        // Useful after randomized insert/update/remove stress sequences.
         SpatialValidationResult Validate() const
         {
             if (m_Root == SpatialInvalidIndex)
@@ -591,6 +633,9 @@ export namespace kairo::foundation::spatial
         }
 
         [[nodiscard]]
+        // Observe actual allocated nodes, leaf count, height, balance
+        // and area ratio. Poor ratios indicate pruning overhead;
+        // a measured benchmark is still needed to claim performance.
         DynamicAABBTreeStats Stats() const noexcept
         {
             DynamicAABBTreeStats stats;
@@ -637,6 +682,9 @@ export namespace kairo::foundation::spatial
             return stats;
         }
 
+        // Destroy all current node allocations, resetting root;
+        // every SpatialIndex becomes invalid. User-owned primitive
+        // records still exist outside this acceleration structure.
         void Clear()
         {
             m_Nodes.clear();
@@ -649,6 +697,10 @@ export namespace kairo::foundation::spatial
         float m_FattenAmount = 0.1f;
 
         [[nodiscard]]
+        // Current implementation appends rather than reuses freed
+        // indices. Frequent reinsertion therefore grows m_Nodes
+        // despite some old slots becoming unallocated. Measure or
+        // redesign node freelist reuse in a separate functional pass.
         SpatialIndex AllocateNode()
         {
             const SpatialIndex index =
@@ -659,6 +711,9 @@ export namespace kairo::foundation::spatial
             return index;
         }
 
+        // Reset a slot to unallocated, but do not return it to a
+        // reusable freelist in this implementation. Caller handles
+        // pointing to this index must never be used again.
         void FreeNode(
             SpatialIndex index)
         {
@@ -677,6 +732,10 @@ export namespace kairo::foundation::spatial
         // Descend using a greedy incremental surface-area enlargement
         // cost to choose a sibling, create an internal parent and refit
         // ancestors. Greedy choice is a heuristic, not a global optimum.
+        // Greedy surface-area-enlargement descent chooses a sibling
+        // then creates a parent enclosing two children. Refit parent
+        // bounds/heights toward root; this is heuristic tree quality,
+        // not guaranteed globally optimal balancing.
         void InsertLeaf(
             SpatialIndex leaf)
         {
@@ -732,6 +791,9 @@ export namespace kairo::foundation::spatial
             RefitAncestors(parent);
         }
 
+        // Splice the remaining sibling into the removed parent's
+        // position, then refit ancestors. This changes parent/index
+        // topology but does not remove the authoritative primitive.
         void RemoveLeaf(
             SpatialIndex leaf)
         {
@@ -774,6 +836,9 @@ export namespace kairo::foundation::spatial
 
         // Recompute parent fat bounds and subtree heights from children
         // up to the root after structural updates.
+        // Walk parents until root, recomputing each internal node's
+        // fat union and max-child height. Stale parent bounds could
+        // cause false negatives during query pruning.
         void RefitAncestors(
             SpatialIndex index)
         {
