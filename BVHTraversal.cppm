@@ -1,6 +1,19 @@
-// TEACHING MODULE: Traverses BVH with ray/AABB, overlap and frustum pruning. The caller-supplied primitive-hit callback performs real shape intersection; traversal only determines which leaf primitives to consider and tracks visited/tested counts. Closest hit updates max distance to prune later nodes.
+// TEACHING MODULE: BVHTraversal consumes the BVH built by BVHBuilder.
+// It visits overlapping bounding nodes, then passes leaf UserIndex values
+// to the caller's primitive-intersection callback. Neither traversal nor
+// the BVH alone knows how to intersect the actual triangle or mesh object.
+//
+// Raycast tracks the closest accepted distance and prunes later boxes.
+// Its Hits array records accepted progressively nearer hits encountered
+// during traversal; do not assume it lists *all* intersections. Use
+// RaycastAny for an early boolean hit/occlusion result. QueryAABB/QuerySphere
+// instead return candidate primitive IDs after bounding-volume filtering.
+//
+// BVH nodes/index ranges are owned by BVH. A leaf refers into an ordered
+// primitive array; UserID (external identity) differs from UserIndex
+// (source primitive index). The physics mesh narrowphase consumes the
+// candidate-list API; a renderer/ray tracer supplies exact hit callbacks.
 module;
-
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -19,6 +32,8 @@ import Kairo.Foundation.Spatial.BVH;
 
 export namespace kairo::foundation::spatial
 {
+    // Statistics are observations of traversal workload. They do not
+    // certify exact geometry correctness or cross-machine performance.
     struct BVHTraversalStats final
     {
         std::uint32_t VisitedNodes = 0;
@@ -28,6 +43,9 @@ export namespace kairo::foundation::spatial
     template<typename PrimitiveHitCallback>
     [[nodiscard]]
     /// TEACHING API: SpatialRaycastResult Raycast( — AABB tests prune nodes while callback performs exact primitive hit testing; tighten closest ray distance when a nearer hit is found.
+    // The callback must compute the hit for a source primitive index
+    // and return an optional distance-bearing hit. The traversal fills
+    // external UserID and primitive index into accepted hit records.
     SpatialRaycastResult Raycast(
         const BVH& bvh,
         const SpatialRay& ray,
@@ -46,6 +64,9 @@ export namespace kairo::foundation::spatial
         stack.reserve(64);
         stack.push_back(0);
 
+        // Monotonically lower this bound as closer hits are discovered.
+        // Earlier accepted records may remain in Hits despite no longer
+        // being closest, so use Closest for the final nearest hit.
         float closestDistance = maxDistance;
 
         while (!stack.empty())
@@ -128,6 +149,9 @@ export namespace kairo::foundation::spatial
     template<typename PrimitiveHitCallback>
     [[nodiscard]]
     /// TEACHING API: bool RaycastAny( — Short-circuit on first accepted callback hit; cheaper than finding closest when caller needs only occlusion.
+    // Occlusion/any-hit mode: return as soon as the caller callback
+    // accepts a primitive. Unlike Raycast, no nearest-hit distance is
+    // maintained and no materialized hit records are required.
     bool RaycastAny(
         const BVH& bvh,
         const SpatialRay& ray,
@@ -186,6 +210,9 @@ export namespace kairo::foundation::spatial
 
     [[nodiscard]]
     /// TEACHING API: SpatialOverlapResult QueryAABB( — Traverse bounding-box candidates and filter by layer mask; outputs are potential overlaps for downstream exact tests.
+    // Box overlap candidates are returned as source UserIndex plus
+    // external UserID. Downstream geometry still decides physical
+    // contact for non-box shapes.
     SpatialOverlapResult QueryAABB(
         const BVH& bvh,
         const SpatialAABB& query,
