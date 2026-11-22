@@ -1,6 +1,6 @@
 # KairoSpatial
 
-**Learn spatial indexing:** [From AABBs to BVH and navigation](docs/SPATIAL_WALKTHROUGH.md) · [Source reading order](docs/SOURCE_READING_ORDER.md) · [Dynamic AABB tree insertion, queries and rebuild laboratory](docs/DYNAMIC_AABB_TREE_INSERT_QUERY_REBUILD_LAB.md) · [How the physics world consumes the dynamic tree](https://github.com/swayam8624/KairoPhysicsEngine/blob/main/docs/COLLISION_PIPELINE_WALKTHROUGH.md)
+**Learn spatial indexing:** [From AABBs to BVH and navigation](docs/SPATIAL_WALKTHROUGH.md) · [Source reading order](docs/SOURCE_READING_ORDER.md) · [Dynamic AABB tree insertion, queries and rebuild laboratory](docs/DYNAMIC_AABB_TREE_INSERT_QUERY_REBUILD_LAB.md) · [BVH nearest hits and A* graph search worked lab](docs/BVH_RAYCAST_AND_ASTAR_SEARCH_LAB.md) · [How the physics world consumes the dynamic tree](https://github.com/swayam8624/KairoPhysicsEngine/blob/main/docs/COLLISION_PIPELINE_WALKTHROUGH.md)
 
 `KairoSpatial` is the engine spatial acceleration foundation. It keeps static
 scene queries, dynamic broadphase, world partitioning, nearest-neighbor lookup,
