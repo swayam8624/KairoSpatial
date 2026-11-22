@@ -1,4 +1,21 @@
-// TEACHING MAP: Dynamic bounding-volume hierarchy supports cheap broadphase queries in KairoPhysicsEngine. Objects remain responsible for exact collision tests in Narrowphase; updates and proxies must preserve bounded spatial invariants.
+// TEACHING MAP: KairoPhysicsEngine's BroadphaseWorld translates ColliderID
+// into SpatialID and keeps a SpatialIndex proxy for each *finite* collider.
+// This DynamicAABBTree owns index nodes, not rigid bodies or exact geometry.
+// KairoPhysicsEngine::Narrowphase still tests candidate shape pairs.
+//
+// Each leaf stores TightBounds (current spatial shape bounds) and FatBounds
+// (expanded bounds allowing limited motion before re-insertion). An internal
+// node encloses its children. Query methods prune on fat internal boxes and
+// test tight leaf boxes; the distinction limits false positive candidates.
+// Insert returns a proxy handle; Update may refit or remove/reinsert a leaf.
+//
+// This tree's ComputePairs performs a QueryAABB for each allocated leaf,
+// canonicalizes pair IDs, then sorts/deduplicates. It is not an exact-pair
+// oracle or a claim of optimal complexity for dense/large workloads.
+// RebuildBottomUp clears/reinserts leaves and can invalidate old proxy
+// handles stored in other modules: callers must rebuild their handle map.
+//
+// See PhysicsEngine/Broadphase.cppm, SpatialTests.cpp and ScaleStressTests.cpp.
 module;
 
 #include <algorithm>
@@ -18,6 +35,9 @@ import Kairo.Foundation.Spatial.Types;
 
 export namespace kairo::foundation::spatial
 {
+    // Internal nodes contain child indices; leaves contain externally
+    // supplied UserID values. SpatialIndex is an allocation handle and
+    // must not be confused with SpatialID/PhysicsEngine's ColliderID.
     struct DynamicAABBTreeNode final
     {
         SpatialAABB TightBounds = SpatialAABB::Empty();
@@ -83,6 +103,9 @@ export namespace kairo::foundation::spatial
             return leaf;
         }
 
+        // Deletes an index leaf and returns its node allocation to the
+        // free list. The owning application must separately delete or
+        // deactivate its real collider/primitive record.
         void Remove(
             SpatialIndex proxy)
         {
@@ -117,7 +140,11 @@ export namespace kairo::foundation::spatial
         }
 
         [[nodiscard]]
+        // Traverse fat hierarchy bounds for pruning, then check tight
+        // bounds and masks on leaves. Returns candidate IDs, not actual
+        // geometry intersections; physics narrowphase checks those.
         SpatialOverlapResult QueryAABB(
+
             const SpatialAABB& query,
             SpatialLayerMask layerMask = ~SpatialLayerMask(0)) const
         {
@@ -288,7 +315,11 @@ export namespace kairo::foundation::spatial
 
         [[nodiscard]]
         /// TEACHING API: std::vector<SpatialPair> ComputePairs( — Find canonically ordered candidate pairs using tree overlap, not exact collider-to-collider contact.
+        // Simpler correctness-first O(n * query-cost) sweep: query
+        // each live leaf's tight bounds against the same tree, then
+        // canonicalize/deduplicate. This may be costly for dense scenes.
         std::vector<SpatialPair> ComputePairs(
+
             SpatialLayerMask layerMask = ~SpatialLayerMask(0)) const
         {
             std::vector<SpatialPair> pairs;
@@ -469,6 +500,9 @@ export namespace kairo::foundation::spatial
         }
 
         /// TEACHING API: void RebuildBottomUp( — Reconstruct tree from live leaf data to improve hierarchy quality; invalidates old internal node topology.
+        // WARNING: full Clear/Insert creates fresh node handles. Even if
+        // UserID is preserved, an external cache of SpatialIndex proxies
+        // must be rebuilt after this operation.
         void RebuildBottomUp()
         {
             std::vector<SpatialPrimitive> leaves;
@@ -640,6 +674,9 @@ export namespace kairo::foundation::spatial
             }
         }
 
+        // Descend using a greedy incremental surface-area enlargement
+        // cost to choose a sibling, create an internal parent and refit
+        // ancestors. Greedy choice is a heuristic, not a global optimum.
         void InsertLeaf(
             SpatialIndex leaf)
         {
@@ -735,6 +772,8 @@ export namespace kairo::foundation::spatial
             m_Nodes[leaf].Parent = SpatialInvalidIndex;
         }
 
+        // Recompute parent fat bounds and subtree heights from children
+        // up to the root after structural updates.
         void RefitAncestors(
             SpatialIndex index)
         {
