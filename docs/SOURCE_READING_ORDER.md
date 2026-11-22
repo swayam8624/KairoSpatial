@@ -6,22 +6,68 @@ Follow source links sequentially. For each API/function, identify its input cont
 
 ## Read in this order
 
-1. [`CMakeLists.txt`](../CMakeLists.txt)
-2. [`KairoSpatial.cppm`](../KairoSpatial.cppm)
-3. [`SpatialTypes.cppm`](../SpatialTypes.cppm)
-4. [`BVH.cppm`](../BVH.cppm)
-5. [`BVHBuilder.cppm`](../BVHBuilder.cppm)
-6. [`BVHTraversal.cppm`](../BVHTraversal.cppm)
-7. [`DynamicAABBTree.cppm`](../DynamicAABBTree.cppm)
-8. [`SweepAndPrune.cppm`](../SweepAndPrune.cppm)
-9. [`SpatialHash.cppm`](../SpatialHash.cppm)
-10. [`Octree.cppm`](../Octree.cppm)
-11. [`KDTree.cppm`](../KDTree.cppm)
-12. [`SpatialQuery.cppm`](../SpatialQuery.cppm)
-13. [`NavMesh.cppm`](../NavMesh.cppm)
-14. [`AStar.cppm`](../AStar.cppm)
-15. [`tests`](../tests)
-16. [`visual`](../visual)
+Spatial indices answer *where to look first*, not necessarily *what collides*.
+Follow this sequence to understand the API and the implementation layers.
+See [KairoGeometry's guide](https://github.com/swayam8624/KairoGeometry/blob/docs/teaching-walkthrough-20261121/docs/SOURCE_READING_ORDER.md)
+for primitive intersection rules and the
+[KairoPhysicsEngine collision guide](https://github.com/swayam8624/KairoPhysicsEngine/blob/docs/teaching-walkthrough-20261121/docs/SOURCE_READING_ORDER.md)
+for the simulation consumer.
+
+### Part A — Common contracts and static scene indexing
+
+1. [`CMakeLists.txt`](../CMakeLists.txt): C++23 modules, dependent Kairo repositories and test targets.
+2. [`KairoSpatial.cppm`](../KairoSpatial.cppm): umbrella exports versus narrower imports.
+3. [`SpatialTypes.cppm`](../SpatialTypes.cppm): `SpatialID`, `SpatialIndex`, AABBs, layers and query-result conventions.
+4. [`BVH.cppm`](../BVH.cppm): node topology, leaves and immutable-ish primitive ranges.
+5. [`BVHBuilder.cppm`](../BVHBuilder.cppm): partitioning and tree construction heuristics.
+6. [`BVHTraversal.cppm`](../BVHTraversal.cppm): box pruning and caller-owned primitive hit callbacks.
+7. [`SpatialQuery.cppm`](../SpatialQuery.cppm): public query operations and result construction.
+
+**Exercise:** build a BVH from a few boxes, compare candidate IDs with
+brute-force AABB checks, and explain why an accepted leaf still needs a
+shape intersection callback for a true ray hit.
+
+### Part B — Dynamic broadphase trade-offs
+
+8. [`DynamicAABBTree.cppm`](../DynamicAABBTree.cppm): tight vs fat AABBs, proxy handles and dynamic updates.
+9. [`SweepAndPrune.cppm`](../SweepAndPrune.cppm): sorted axis intervals and candidate checks.
+10. [`SpatialHash.cppm`](../SpatialHash.cppm): grid cell mapping and multi-cell candidate work.
+11. [`Octree.cppm`](../Octree.cppm): hierarchical 3D subdivision.
+12. [`Quadtree.cppm`](../Quadtree.cppm): hierarchical 2D subdivision.
+13. [`KDTree.cppm`](../KDTree.cppm): spatial split axis and range/nearest search.
+
+**Exercise:** move a collider inside its fat AABB and then beyond it,
+checking `DynamicAABBTree::Update` return values. Record tree height,
+candidate pairs, and false positives. Do not assume a faster broadphase
+also improves narrowphase accuracy.
+
+**Handle warning:** `RebuildBottomUp` reinserts leaves with new allocation
+handles. Rebuild any external `SpatialIndex` maps after calling it; the
+externally supplied `SpatialID` does not serve as a tree node index.
+
+### Part C — Graph and crowd-navigation algorithms
+
+14. [`NavigationGraph.cppm`](../NavigationGraph.cppm): vertices, edges and graph topology.
+15. [`AStar.cppm`](../AStar.cppm): heuristic search and path-cost assumptions.
+16. [`NavMesh.cppm`](../NavMesh.cppm): walkable regions and navigation topology.
+17. [`CrowdAvoidance.cppm`](../CrowdAvoidance.cppm): local steering constraints.
+18. [`SpatialDebug.cppm`](../SpatialDebug.cppm): inspectable index/graph diagnostics.
+
+**Exercise:** compare a graph shortest path with local avoidance.
+Neither is the same as collision response in a rigid-body physics solver.
+
+### Part D — Tests, stress and visualization
+
+19. [`tests/SpatialTests.cpp`](../tests/SpatialTests.cpp): reference comparisons for trees, grid and queries.
+20. [`tests/ScaleStressTests.cpp`](../tests/ScaleStressTests.cpp): scale-sensitive behavior.
+21. [`tests/NavMeshTests.cpp`](../tests/NavMeshTests.cpp): graph/navmesh constraints.
+22. [`tests/CrowdAvoidanceTests.cpp`](../tests/CrowdAvoidanceTests.cpp): local crowd behavior.
+23. [`visual/SpatialVisualizer.cpp`](../visual/SpatialVisualizer.cpp): C++ visualization entry.
+24. [`visual/server.py`](../visual/server.py): optional local server bridge.
+
+**Record:** tree node count/height, candidate count, validated shape hits,
+time per scenario, configuration, and host. A benchmark result is only
+meaningful with the actual workload and method attached.
 
 ## How this repository interacts with others
 
