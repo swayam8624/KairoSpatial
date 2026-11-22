@@ -46,6 +46,10 @@ export namespace kairo::foundation::spatial
     // The callback must compute the hit for a source primitive index
     // and return an optional distance-bearing hit. The traversal fills
     // external UserID and primitive index into accepted hit records.
+    // Traverse BVH boxes with an explicit stack but delegate true ray/primitive
+    // intersection to caller-owned callback. Tighten closestDistance when a
+    // nearer hit appears; SpatialRaycastResult::Hits tracks progressively
+    // accepted hits, not every intersecting surface.
     SpatialRaycastResult Raycast(
         const BVH& bvh,
         const SpatialRay& ray,
@@ -67,6 +71,9 @@ export namespace kairo::foundation::spatial
         // Monotonically lower this bound as closer hits are discovered.
         // Earlier accepted records may remain in Hits despite no longer
         // being closest, so use Closest for the final nearest hit.
+        // Maintain the best exact hit distance found so far. Any node with its
+        // nearest box entry beyond this value cannot contain a better answer and can
+        // be pruned; box tests alone never create a SurfaceHit.
         float closestDistance = maxDistance;
 
         while (!stack.empty())
@@ -96,6 +103,9 @@ export namespace kairo::foundation::spatial
                     }
 
                     ++result.TestedPrimitives;
+                    // Call the source primitive's exact geometry intersection only after BVH and
+                    // layer-mask pruning. Populate UserID/UserIndex from BVH leaf metadata so
+                    // render or physics consumers can map the result back.
                     std::optional<SpatialRayHit> hit =
                         primitiveHit(primitive.UserIndex, ray);
 
@@ -119,6 +129,9 @@ export namespace kairo::foundation::spatial
                 const bool hitRight =
                     RayIntersectsAABB(ray, bvh.Nodes[node.Right].Bounds, closestDistance, rightDistance);
 
+                // Push the farther child first because this stack is LIFO; visit the nearer
+                // child immediately. Finding a closer exact hit earlier improves subsequent
+                // max-distance AABB pruning without changing closest-hit correctness.
                 if (hitLeft && hitRight)
                 {
                     if (leftDistance < rightDistance)
@@ -152,6 +165,9 @@ export namespace kairo::foundation::spatial
     // Occlusion/any-hit mode: return as soon as the caller callback
     // accepts a primitive. Unlike Raycast, no nearest-hit distance is
     // maintained and no materialized hit records are required.
+    // Any-hit traversal needs only one callback-accepted primitive, not nearest
+    // distance or UV/material details. Scene::Occluded supplies a finite
+    // shadow-ray limit and a true primitive hit callback.
     bool RaycastAny(
         const BVH& bvh,
         const SpatialRay& ray,
@@ -213,6 +229,9 @@ export namespace kairo::foundation::spatial
     // Box overlap candidates are returned as source UserIndex plus
     // external UserID. Downstream geometry still decides physical
     // contact for non-box shapes.
+    // BVH overlap query returns bounded primitive candidates by layer mask, not
+    // verified triangle or sphere collision. The downstream narrowphase or
+    // caller's shape predicate must decide actual contact.
     SpatialOverlapResult QueryAABB(
         const BVH& bvh,
         const SpatialAABB& query,
