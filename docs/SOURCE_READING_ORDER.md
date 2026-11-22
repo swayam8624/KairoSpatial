@@ -6,6 +6,8 @@ Follow source links sequentially. For each API/function, identify its input cont
 
 **Worked exercise:** [Dynamic AABB tree proxy identity, fat-box update, ray query, memory growth and rebuild invalidation](DYNAMIC_AABB_TREE_INSERT_QUERY_REBUILD_LAB.md). It explains why candidate sets must be checked against an independent AABB overlap oracle.
 
+**Second worked lab:** [BVH exact-hit callbacks, near-first pruning, any-hit occlusion and A* admissibility/heap reconstruction](BVH_RAYCAST_AND_ASTAR_SEARCH_LAB.md). It compares these searches with independent brute-force and Dijkstra oracles.
+
 ## Read in this order
 
 Spatial indices answer *where to look first*, not necessarily *what collides*.
